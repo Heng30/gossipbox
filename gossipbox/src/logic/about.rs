@@ -5,7 +5,7 @@ use slint::ComponentHandle;
 pub fn init(ui: &AppWindow) {
     let mut about = ui.global::<Store>().get_about_dialog();
     about.title = slint::format!(
-        "ChatBox {}",
+        "GossipBox {}",
         if VERSION.is_empty() {
             "v1.0.0"
         } else {

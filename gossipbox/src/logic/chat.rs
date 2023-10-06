@@ -34,6 +34,7 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
                 r#type: "plain".to_string(),
                 from_uuid: config::app_uuid(),
                 to_uuid: suuid.to_string(),
+                name: config::name(),
                 text: text.to_string(),
                 timestamp: util::time::timestamp_millisecond(),
                 ..Default::default()

@@ -1,12 +1,19 @@
 use super::chat;
 use super::data::SendItem;
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
-use crate::{config, util::translator::tr};
+use crate::{config, util, util::translator::tr};
+use log::warn;
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
-use tokio::sync::mpsc;
+use tokio::{
+    sync::mpsc,
+    task,
+    time::{sleep, Duration},
+};
 
 pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
     ui.global::<Store>().set_user_name(config::name().into());
+
+    ping_timer(tx.clone());
 
     let ui_handle = ui.as_weak();
     ui.global::<Logic>()
@@ -27,7 +34,8 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
     ui.global::<Logic>()
         .on_switch_session(move |_old_uuid, new_uuid| {
             let ui = ui_handle.unwrap();
-            for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
+            for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate()
+            {
                 if session.uuid == new_uuid {
                     ui.global::<Store>()
                         .set_session_datas(session.chat_items.clone());
@@ -110,4 +118,25 @@ pub fn add_session(ui: &AppWindow, sitem: SendItem) {
         ui.global::<Store>()
             .set_current_session_uuid(sitem.from_uuid.as_str().into());
     }
+}
+
+fn ping_timer(tx: mpsc::UnboundedSender<String>) {
+    task::spawn(async move {
+        loop {
+            if let Ok(text) = serde_json::to_string(&SendItem {
+                r#type: "ping".to_string(),
+                timestamp: util::time::timestamp_millisecond(),
+                ..Default::default()
+            }) {
+                let (tx, text) = (tx.clone(), text.clone());
+                let _ = slint::invoke_from_event_loop(move || {
+                    if let Err(e) = tx.send(text) {
+                        warn!("{e:?}");
+                    }
+                });
+            }
+
+            sleep(Duration::from_secs(5)).await;
+        }
+    });
 }

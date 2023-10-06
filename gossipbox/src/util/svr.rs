@@ -1,5 +1,5 @@
+use crate::logic::SendItem;
 use crate::slint_generatedAppWindow::{AppWindow, Logic};
-use std::collections::HashSet;
 use crate::util::translator::tr;
 use crate::{chat, config, SendCB};
 use anyhow::{anyhow, Result};
@@ -14,6 +14,7 @@ use libp2p::{
 use log::{debug, warn};
 use slint::{ComponentHandle, Weak};
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use tokio::{select, sync::mpsc, task, time::Duration};
 
@@ -57,7 +58,7 @@ async fn start_gossipsub(
             ))
         })?)
         .multiplex(yamux::Config::default())
-        .timeout(Duration::from_secs(20))
+        .timeout(Duration::from_secs(30))
         .boxed();
     let quic_transport = quic::tokio::Transport::new(quic::Config::new(&id_keys));
     let transport = OrTransport::new(quic_transport, tcp_transport)
@@ -106,16 +107,23 @@ async fn start_gossipsub(
     loop {
         select! {
             Some(msg) = rx.recv() => {
-                debug!("Send message: {}", msg);
+                let sitem = SendItem::from(msg.as_str());
+                let is_can_print = sitem.r#type != "ping";
+
+                if is_can_print {
+                    debug!("Send message: {}", msg);
+                }
+
                 if let Err(e) = swarm
                     .behaviour_mut().gossipsub
                     .publish(topic.clone(), msg.as_bytes()) {
 
-                    let estr = e.to_string();
-                    let ui = ui.clone();
+                    let (ui, estr) = (ui.clone(), e.to_string());
                     let _ = slint::invoke_from_event_loop(move || {
-                        ui.unwrap().global::<Logic>()
-                            .invoke_show_message(slint::format!("{}. {}: {:?}", tr("发送失败"), tr("原因"), estr), "warning".into());
+                        if is_can_print {
+                            ui.unwrap().global::<Logic>()
+                                .invoke_show_message(slint::format!("{}. {}: {:?}", tr("发送失败"), tr("原因"), estr), "warning".into());
+                        }
                     });
                 }
             }

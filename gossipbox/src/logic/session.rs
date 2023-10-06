@@ -45,13 +45,12 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             .invoke_show_message(tr("刷新...").into(), "info".into());
 
         for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
-            let uuid = session.uuid.to_string();
             session.status = "offline".into();
             ui.global::<Store>()
                 .get_chat_sessions()
                 .set_row_data(index, session);
 
-            chat::send_flush_request(&ui, tx.clone(), uuid);
+            chat::send_flush_request(&ui, tx.clone());
         }
 
         ui.global::<Logic>()

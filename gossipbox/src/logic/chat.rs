@@ -2,6 +2,7 @@ use super::{data::SendItem, session};
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, Logic, Store};
 use crate::util::translator::tr;
 use crate::{config, util};
+use log::warn;
 use slint::{ComponentHandle, Model, VecModel, Weak};
 use tokio::sync::mpsc;
 
@@ -106,21 +107,25 @@ pub fn recv_cb(
     let ui = ui.unwrap();
     let sitem = SendItem::from(msg.as_str());
 
-    if sitem.r#type.as_str() == "handshake-req" {
-        if local_peer_id != sitem.text {
-            return;
+    match sitem.r#type.as_str() {
+        "handshake-req" => {
+            if local_peer_id != sitem.text {
+                return;
+            }
+            handle_handshake_request(&ui, tx.clone(), sitem);
         }
-        handle_handshake_request(&ui, tx.clone(), sitem);
-    } else {
-        if sitem.to_uuid != config::app_uuid() {
-            return;
-        }
-        match sitem.r#type.as_str() {
-            "handshake-res" => handle_handshake_respond(&ui, sitem),
-            "flush-req" => handle_flush_request(&ui, tx.clone(), sitem),
-            "flush-res" => handle_flush_respond(&ui, sitem),
-            "plain" => handle_plain_text(&ui, msg),
-            _ => (),
+        "flush-req" => handle_flush_request(&ui, tx.clone(), sitem),
+        _ => {
+            if sitem.to_uuid != config::app_uuid() {
+                warn!("Invalid to_uuid: {}", sitem.to_uuid);
+                return;
+            }
+            match sitem.r#type.as_str() {
+                "handshake-res" => handle_handshake_respond(&ui, sitem),
+                "flush-res" => handle_flush_respond(&ui, sitem),
+                "plain" => handle_plain_text(&ui, msg),
+                _ => (),
+            }
         }
     }
 }
@@ -154,14 +159,13 @@ pub fn send_handshake_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>,
     );
 }
 
-pub fn send_flush_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, to_uuid: String) {
+pub fn send_flush_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
     send_text(
         ui,
         tx,
         SendItem {
             r#type: "flush-req".to_string(),
             from_uuid: config::app_uuid(),
-            to_uuid,
             name: config::name(),
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()

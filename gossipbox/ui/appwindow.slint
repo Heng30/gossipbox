@@ -58,9 +58,7 @@ export component AppWindow inherits Window {
 
         HorizontalLayout {
             LPanel {}
-
-            rpanel := RPanel {
-            }
+            rpanel := RPanel { }
         }
 
         modal := Rectangle {
@@ -76,7 +74,7 @@ export component AppWindow inherits Window {
 
             setting-dialog := SettingDialog {
                 close => {
-                    // rpanel.force-question-input-focus();
+                    rpanel.focus();
                 }
             }
 

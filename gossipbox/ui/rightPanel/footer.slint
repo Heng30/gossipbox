@@ -30,9 +30,9 @@ export component Footer inherits Rectangle {
                     Logic.send-text(root.question);
                     root.question = "";
                     vbox.ensure-show-cursor();
-                } else if (event.text == "[") {
+                } else if (event.text == "t") {
                     root.scroll-to-top();
-                } else if (event.text == "]") {
+                } else if (event.text == "b") {
                     root.scroll-to-bottom();
                 } else if (event.text == "k") {
                     root.scroll-up();

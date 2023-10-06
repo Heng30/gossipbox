@@ -15,7 +15,9 @@ export struct Translation {
     delete-or-not: string,
     reset-or-not: string,
 
-    net-label: string,
+    name-label: string,
+    online: string,
+    offline: string,
 
     session-chat-copy-success: string,
     session-chat-enabled-auto-scroll-down: string,
@@ -85,7 +87,9 @@ export global Translator {
             delete-or-not: is-cn ? "是否删除？" : "Are You Sure to Delete?",
             reset-or-not: is-cn ? "是否重置？" : "Reset or not?",
 
-            net-label: is-cn ? "网络:" : "Net:",
+            name-label: is-cn ? "昵称:" : "Name:",
+            online: is-cn ? "在线" : "online",
+            offline: is-cn ? "离线" : "offline",
 
             session-chat-copy-success: is-cn ?  "复制会话成功!" : "Copy Session Chat Success!",
             session-chat-enabled-auto-scroll-down: is-cn ? "启用会话更新自动滚动!" : "Enabled Chats Auto Scroll to Bottom When Updating!" ,

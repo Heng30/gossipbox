@@ -6,6 +6,8 @@ use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use tokio::sync::mpsc;
 
 pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
+    ui.global::<Store>().set_user_name(config::name().into());
+
     let ui_handle = ui.as_weak();
     ui.global::<Logic>()
         .on_reset_current_session_chats(move || {
@@ -42,8 +44,14 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
         ui.global::<Logic>()
             .invoke_show_message(tr("刷新...").into(), "info".into());
 
-        for session in ui.global::<Store>().get_chat_sessions().iter() {
-            chat::send_flush_request(&ui, tx.clone(), session.uuid.to_string());
+        for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
+            let uuid = session.uuid.to_string();
+            session.status = "offline".into();
+            ui.global::<Store>()
+                .get_chat_sessions()
+                .set_row_data(index, session);
+
+            chat::send_flush_request(&ui, tx.clone(), uuid);
         }
 
         ui.global::<Logic>()
@@ -69,7 +77,7 @@ pub fn add_session(ui: &AppWindow, sitem: SendItem) {
     for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
         if session.uuid.as_str() == sitem.from_uuid.as_str() {
             session.name = sitem.name.into();
-            session.status = tr("在线").into();
+            session.status = "online".into();
 
             ui.global::<Store>()
                 .get_chat_sessions()
@@ -88,7 +96,7 @@ pub fn add_session(ui: &AppWindow, sitem: SendItem) {
         .push(ChatSession {
             uuid: sitem.from_uuid.as_str().into(),
             name: sitem.name.into(),
-            status: tr("在线").into(),
+            status: "online".into(),
             chat_items: chat_items.clone(),
             ..Default::default()
         });

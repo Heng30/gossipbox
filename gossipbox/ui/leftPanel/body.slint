@@ -9,6 +9,26 @@ import { CenterLayout } from "../base/center-layout.slint";
 export component Body inherits Rectangle {
     private property<length> item-height: Theme.default-font-size + Theme.padding * 6;
 
+    pure function get-status(status: string) -> string {
+        if (status == "online") {
+            return Store.translator.online;
+        } else if (status == "offline") {
+            return Store.translator.offline;
+        }
+
+        return status;
+    }
+
+    pure function get-status-color(status: string) -> color {
+        if (status == "online") {
+            return Theme.success-color;
+        } else if (status == "offline") {
+            return Theme.warning-color;
+        }
+
+        return Theme.brand-color;
+    }
+
     VerticalLayout {
         alignment: end;
         CenterLayout {
@@ -37,26 +57,37 @@ export component Body inherits Rectangle {
                 }
 
                 HorizontalLayout {
+                    alignment: space-between;
                     padding-left: Theme.padding * 2;
                     padding-right: Theme.padding * 2;
 
-                    if (data.uuid == Store.current-session-uuid) : VerticalLayout {
-                        alignment: center;
-                        height: root.item-height;
-                        padding-right: Theme.padding * 2;
+                    HorizontalLayout {
+                        if (data.uuid == Store.current-session-uuid) : VerticalLayout {
+                            alignment: center;
+                            height: root.item-height;
+                            padding-right: Theme.padding * 2;
 
-                        Rectangle {
-                            width: 4px;
-                            height: 80%;
-                            border-radius: 2px;
-                            background: Theme.brand-color;
+                            Rectangle {
+                                width: 4px;
+                                height: 80%;
+                                border-radius: 2px;
+                                background: Theme.brand-color;
+                            }
+                        }
+
+                        name-txt := Text {
+                            color: data.uuid == Store.current-session-uuid ? Theme.brand-color : Theme.regular-text-color;
+                            text: data.name;
+                            font-size: Theme.enlarge-font-size;
+                            overflow: elide;
+                            vertical-alignment: center;
                         }
                     }
 
                     Text {
-                        color: data.uuid == Store.current-session-uuid ? Theme.brand-color : Theme.regular-text-color;
-                        text: data.name;
-                        font-size: Theme.enlarge-font-size;
+                        color: root.get-status-color(data.status);
+                        text: root.get-status(data.status);
+                        font-size: name-txt.font-size - 4px;
                         overflow: elide;
                         vertical-alignment: center;
                     }

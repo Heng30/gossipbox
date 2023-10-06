@@ -27,10 +27,15 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
     ui.global::<Logic>()
         .on_switch_session(move |_old_uuid, new_uuid| {
             let ui = ui_handle.unwrap();
-            for session in ui.global::<Store>().get_chat_sessions().iter() {
+            for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
                 if session.uuid == new_uuid {
                     ui.global::<Store>()
                         .set_session_datas(session.chat_items.clone());
+
+                    session.unread_count = 0;
+                    ui.global::<Store>()
+                        .get_chat_sessions()
+                        .set_row_data(index, session);
 
                     ui.global::<Store>().set_current_session_uuid(new_uuid);
                     return;

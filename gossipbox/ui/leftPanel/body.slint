@@ -84,12 +84,11 @@ export component Body inherits Rectangle {
                         }
                     }
 
-                    Text {
-                        color: root.get-status-color(data.status);
-                        text: root.get-status(data.status);
-                        font-size: name-txt.font-size - 4px;
-                        overflow: elide;
+                    status-txt := Text {
                         vertical-alignment: center;
+                        color: root.get-status-color(data.status);
+                        text: data.unread-count + "    " + root.get-status(data.status);
+                        font-size: name-txt.font-size - 4px;
                     }
                 }
             }

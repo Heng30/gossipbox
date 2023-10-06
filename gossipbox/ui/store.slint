@@ -12,6 +12,7 @@ export struct ChatSession {
     name: string,
     avatar: image,
     status: string,
+    unread-count: int,
     chat-items: [ChatItem]
 }
 
@@ -72,11 +73,13 @@ export global Store  {
         //     name: "会话1",
         //     uuid: "session-uuid-1",
         //     status: "online",
+        //     unread-count: 10,
         // },
         // {
         //     name: "会话2",
         //     uuid: "session-uuid-2",
         //     status: "offline",
+        //     unread-count: 2,
         // },
     ];
 

@@ -3,7 +3,7 @@
 [中文文档](./README.zh-CN.md)
 
 #### Introduction
-It's a chat software running in a p2p network. The program is written using `Slint-UI` and `Rust`.
+It's a chat software running in a `p2p` network. The program is written using `Slint-UI` and `Rust`.
 
 #### Features
 - [x] Supports automatic node discovery

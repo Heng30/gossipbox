@@ -2,7 +2,6 @@ use super::{data::SendItem, session};
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, Logic, Store};
 use crate::util::translator::tr;
 use crate::{config, util};
-use log::warn;
 use slint::{ComponentHandle, Model, VecModel, Weak};
 use tokio::sync::mpsc;
 
@@ -117,7 +116,6 @@ pub fn recv_cb(
         "flush-req" => handle_flush_request(&ui, tx.clone(), sitem),
         _ => {
             if sitem.to_uuid != config::app_uuid() {
-                warn!("Invalid to_uuid: {}", sitem.to_uuid);
                 return;
             }
             match sitem.r#type.as_str() {
@@ -132,16 +130,32 @@ pub fn recv_cb(
 
 fn handle_plain_text(ui: &AppWindow, msg: String) {
     let sitem = SendItem::from(msg.as_str());
-    ui.global::<Store>()
-        .get_session_datas()
-        .as_any()
-        .downcast_ref::<VecModel<ChatItem>>()
-        .expect("We know we set a VecModel earlier")
-        .push(ChatItem {
-            r#type: "bitem".into(),
-            text: sitem.text.into(),
-            timestamp: util::time::local_now("%m-%d %H:%M:%S").into(),
-        });
+    let cur_suuid = ui.global::<Store>().get_current_session_uuid();
+
+    for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
+        if session.uuid.as_str() == sitem.from_uuid.as_str() {
+            session
+                .chat_items
+                .as_any()
+                .downcast_ref::<VecModel<ChatItem>>()
+                .expect("We know we set a VecModel earlier")
+                .push(ChatItem {
+                    r#type: "bitem".into(),
+                    text: sitem.text.into(),
+                    timestamp: util::time::local_now("%m-%d %H:%M:%S").into(),
+                });
+
+            if session.uuid != cur_suuid {
+                session.unread_count = session.unread_count + 1;
+
+                ui.global::<Store>()
+                    .get_chat_sessions()
+                    .set_row_data(index, session);
+            }
+
+            return;
+        }
+    }
 }
 
 pub fn send_handshake_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, peer_id: String) {

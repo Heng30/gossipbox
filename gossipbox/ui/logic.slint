@@ -1,0 +1,21 @@
+import { SettingDialogConfig } from "./store.slint";
+
+export global Logic {
+    callback hide-window();
+
+    callback flush-sessions();
+    callback switch-session(string, string);
+    callback reset-current-session-chats();
+    callback set-user-name(string);
+
+    callback send-text(string);
+    callback retry-send-text();
+
+    callback show-message(string, string);
+    callback copy-to-clipboard(string);
+    callback handle-ok-cancel-dialog(string, string);
+
+    callback setting-cancel();
+    callback setting-ok(SettingDialogConfig);
+}
+

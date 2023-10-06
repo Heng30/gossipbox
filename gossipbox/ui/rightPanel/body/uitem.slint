@@ -1,0 +1,41 @@
+import { Theme } from "../../theme.slint";
+import { Store } from "../../store.slint";
+import { IconBtn } from "../../base/icon-btn.slint";
+import { Avatar } from "../../base/avatar.slint";
+import { Logic } from "../../logic.slint";
+
+export component UItem inherits VerticalLayout{
+    in-out property text <=> txt.text;
+
+    padding-left: Theme.scroll-width;
+    spacing: Theme.spacing;
+
+    HorizontalLayout {
+        padding-bottom: Theme.padding;
+        alignment: end;
+        spacing: Theme.spacing * 2;
+
+        Rectangle {
+            width: Math.min(Theme.chat-width, txt.preferred-width + txt-box.padding * 3);
+            background: Theme.brand-color.brighter(15%);
+            border-radius: Theme.border-radius;
+
+            txt-box := VerticalLayout {
+                alignment: center;
+                padding: Theme.padding * 2;
+
+                txt := TextInput {
+                    wrap: word-wrap;
+                    color: Theme.regular-text-color;
+                    font-size: Theme.body-font-size;
+                    single-line: false;
+                    read-only: true;
+                }
+            }
+        }
+
+        Avatar {
+            icon-source: @image-url("../../images/skull.svg");
+        }
+    }
+}

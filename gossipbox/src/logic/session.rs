@@ -49,9 +49,9 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             ui.global::<Store>()
                 .get_chat_sessions()
                 .set_row_data(index, session);
-
-            chat::send_flush_request(&ui, tx.clone());
         }
+
+        chat::send_flush_request(&ui, tx.clone());
 
         ui.global::<Logic>()
             .invoke_show_message(tr("刷新成功").into(), "success".into());

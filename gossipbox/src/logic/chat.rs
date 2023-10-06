@@ -176,7 +176,7 @@ fn handle_flush_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, sitem
         SendItem {
             r#type: "flush-res".to_string(),
             from_uuid: config::app_uuid(),
-            to_uuid: sitem.to_uuid,
+            to_uuid: sitem.from_uuid,
             name: config::name(),
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()

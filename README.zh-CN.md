@@ -1,4 +1,4 @@
-![screenshot](./screenshot/chatbox.png)
+![screenshot](./screenshot/gossipbox.png)
 
 [English Document](./README.md)
 

@@ -1,4 +1,4 @@
-![screenshot](./screenshot/chatbox.png)
+![screenshot](./screenshot/gossipbox.png)
 
 [中文文档](./README.zh-CN.md)
 

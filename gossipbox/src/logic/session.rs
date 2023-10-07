@@ -122,6 +122,7 @@ pub fn add_session(ui: &AppWindow, sitem: SendItem) {
 
 fn ping_timer(tx: mpsc::UnboundedSender<String>) {
     task::spawn(async move {
+        let swarm_conf = config::swarm();
         loop {
             if let Ok(text) = serde_json::to_string(&SendItem {
                 r#type: "ping".to_string(),
@@ -136,7 +137,7 @@ fn ping_timer(tx: mpsc::UnboundedSender<String>) {
                 });
             }
 
-            sleep(Duration::from_secs(5)).await;
+            sleep(Duration::from_secs(swarm_conf.ping_interval)).await;
         }
     });
 }

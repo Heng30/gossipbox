@@ -16,6 +16,7 @@ pub struct Config {
     pub name: String,
 
     pub ui: UI,
+    pub swarm: Swarm,
 }
 
 impl Default for Config {
@@ -29,6 +30,7 @@ impl Default for Config {
             net: "goosip-net".to_string(),
             name: uuid.split('-').collect::<Vec<_>>()[0].to_string(),
             ui: UI::default(),
+            swarm: Swarm::default(),
         }
     }
 }
@@ -50,6 +52,23 @@ impl Default for UI {
             win_width: 1200,
             win_height: 800,
             language: "cn".to_string(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Swarm {
+    pub connect_timeout: u64,
+    pub ping_interval: u64,
+    pub keepalive_interval: u64,
+}
+
+impl Default for Swarm {
+    fn default() -> Self {
+        Self {
+            connect_timeout: 30,
+            ping_interval: 10,
+            keepalive_interval: 10,
         }
     }
 }

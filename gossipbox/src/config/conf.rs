@@ -20,6 +20,10 @@ pub fn ui() -> data::UI {
     CONFIG.lock().unwrap().borrow().ui.clone()
 }
 
+pub fn swarm() -> data::Swarm {
+    CONFIG.lock().unwrap().borrow().swarm.clone()
+}
+
 pub fn app_uuid() -> String {
     CONFIG.lock().unwrap().borrow().app_uuid.clone()
 }
@@ -113,6 +117,7 @@ impl Config {
                     self.net = c.net;
                     self.name = c.name;
                     self.ui = c.ui;
+                    self.swarm = c.swarm;
                     Ok(())
                 }
                 Err(e) => Err(anyhow::anyhow!("{}", e.to_string()).into()),

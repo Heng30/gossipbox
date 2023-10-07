@@ -9,6 +9,8 @@ import { CenterLayout } from "../base/center-layout.slint";
 export component Body inherits Rectangle {
     private property<length> item-height: Theme.default-font-size + Theme.padding * 6;
 
+    background: @linear-gradient(0deg, Theme.dark-fill-color 0%, Theme.base-background 100%);
+
     pure function get-status(status: string) -> string {
         if (status == "online") {
             return Store.translator.online;

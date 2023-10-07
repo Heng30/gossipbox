@@ -19,15 +19,6 @@ export struct Translation {
     online: string,
     offline: string,
 
-    session-chat-copy-success: string,
-    session-chat-enabled-auto-scroll-down: string,
-    session-chat-disabled-auto-scroll-down: string,
-    session-chat-stop: string,
-
-    session-new-archive: string,
-    session-edit-archive: string,
-    archive-search-placeholder-text: string,
-
     setting-dialog-ui: string,
     setting-dialog-ui-font-size: string,
     setting-dialog-ui-font-family: string,
@@ -35,6 +26,9 @@ export struct Translation {
     setting-dialog-ui-win-W: string,
     setting-dialog-ui-win-H: string,
     setting-dialog-ui-language: string,
+
+    setting-dialog-chat: string,
+    setting-dialog-chat-username: string,
 
     no-data: string,
     no-message: string,
@@ -54,7 +48,6 @@ export struct Translation {
     tip-save-as-session-screen: string,
     tip-show-session-screen: string,
     tip-edit-session-screen: string,
-    tip-archive: string,
     tip-help: string,
     tip-about: string,
     tip-setting: string,
@@ -91,14 +84,6 @@ export global Translator {
             online: is-cn ? "在线" : "online",
             offline: is-cn ? "离线" : "offline",
 
-            session-chat-copy-success: is-cn ?  "复制会话成功!" : "Copy Session Chat Success!",
-            session-chat-enabled-auto-scroll-down: is-cn ? "启用会话更新自动滚动!" : "Enabled Chats Auto Scroll to Bottom When Updating!" ,
-            session-chat-disabled-auto-scroll-down: is-cn ? "关闭会话更新自动滚动!" : "Disabled Chats Auto Scroll to Bottom When Undating!",
-            session-chat-stop: is-cn ? "正在停止会话...": "Stop Chatting...",
-            session-new-archive: is-cn ?  "归    档" : "Archive",
-            session-edit-archive: is-cn ? "编    辑" : "Edit",
-            archive-search-placeholder-text: is-cn ? "请输入关键词" : "Please Input Keywrods",
-
             setting-dialog-ui: is-cn ? "界面" : "UI",
             setting-dialog-ui-font-size: is-cn ? "字体大小:" : "Font Size:",
             setting-dialog-ui-font-family: is-cn ? "字体样式:" : "Font Family:",
@@ -106,6 +91,9 @@ export global Translator {
             setting-dialog-ui-win-W: is-cn ? "宽" : "Width",
             setting-dialog-ui-win-H: is-cn ?  "高" : "Height",
             setting-dialog-ui-language: is-cn ? "选择语言:" : "Language:",
+
+            setting-dialog-chat: is-cn ? "会话" : "Chat",
+            setting-dialog-chat-username: is-cn ? "昵称:" : "Nickname",
 
             no-data: is-cn ? "没有数据" : "No Data",
             no-message: is-cn ? "没有信息" : "No Message",
@@ -125,7 +113,6 @@ export global Translator {
             tip-save-as-session-screen: is-cn ? "保存为会话启动屏" : "Save as Session Launching Screen",
             tip-show-session-screen: is-cn ? "展示启动屏" : "Show Launching Screen",
             tip-edit-session-screen: is-cn ? "编辑启动屏" : "Edit Launching Screen",
-            tip-archive: is-cn ? "归档" : "Archive",
             tip-help: is-cn ? "帮助" : "Help",
             tip-about: is-cn ? "关于" : "About",
             tip-setting: is-cn ? "设置" : "Setting",

@@ -11,8 +11,6 @@ use tokio::{
 };
 
 pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
-    ui.global::<Store>().set_user_name(config::name().into());
-
     ping_timer(tx.clone());
 
     let ui_handle = ui.as_weak();
@@ -68,20 +66,6 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
 
         ui.global::<Logic>()
             .invoke_show_message(tr("刷新成功").into(), "success".into());
-    });
-
-    let ui_handle = ui.as_weak();
-    ui.global::<Logic>().on_set_user_name(move |name| {
-        let ui = ui_handle.unwrap();
-        ui.global::<Store>().set_user_name(name.clone());
-
-        match config::set_name(name.to_string()) {
-            Err(e) => ui.global::<Logic>().invoke_show_message(
-                slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
-                "warning".into(),
-            ),
-            _ => (),
-        }
     });
 }
 

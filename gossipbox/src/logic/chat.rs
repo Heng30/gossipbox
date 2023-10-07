@@ -34,7 +34,7 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
                 r#type: "plain".to_string(),
                 from_uuid: config::app_uuid(),
                 to_uuid: suuid.to_string(),
-                name: config::name(),
+                name: config::chat().user_name,
                 text: text.to_string(),
                 timestamp: util::time::timestamp_millisecond(),
                 ..Default::default()
@@ -131,8 +131,20 @@ pub fn recv_cb(
 
 fn handle_plain_text(ui: &AppWindow, msg: String) {
     let sitem = SendItem::from(msg.as_str());
-    let cur_suuid = ui.global::<Store>().get_current_session_uuid();
 
+    let mut is_exist = false;
+    for session in ui.global::<Store>().get_chat_sessions().iter() {
+        if session.uuid.as_str() == sitem.from_uuid.as_str() {
+            is_exist = true;
+            break;
+        }
+    }
+
+    if !is_exist {
+        session::add_session(ui, sitem.clone());
+    }
+
+    let cur_suuid = ui.global::<Store>().get_current_session_uuid();
     for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
         if session.uuid.as_str() == sitem.from_uuid.as_str() {
             session
@@ -148,11 +160,12 @@ fn handle_plain_text(ui: &AppWindow, msg: String) {
 
             if session.uuid != cur_suuid {
                 session.unread_count = session.unread_count + 1;
-
-                ui.global::<Store>()
-                    .get_chat_sessions()
-                    .set_row_data(index, session);
+            } else {
+                session.unread_count = 0;
             }
+            ui.global::<Store>()
+                .get_chat_sessions()
+                .set_row_data(index, session);
 
             return;
         }
@@ -166,7 +179,7 @@ pub fn send_handshake_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>,
         SendItem {
             r#type: "handshake-req".to_string(),
             from_uuid: config::app_uuid(),
-            name: config::name(),
+            name: config::chat().user_name,
             text: peer_id.to_string(),
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()
@@ -181,7 +194,7 @@ pub fn send_flush_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
         SendItem {
             r#type: "flush-req".to_string(),
             from_uuid: config::app_uuid(),
-            name: config::name(),
+            name: config::chat().user_name,
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()
         },
@@ -196,7 +209,7 @@ fn handle_flush_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, sitem
             r#type: "flush-res".to_string(),
             from_uuid: config::app_uuid(),
             to_uuid: sitem.from_uuid,
-            name: config::name(),
+            name: config::chat().user_name,
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()
         },
@@ -217,7 +230,7 @@ fn handle_handshake_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, s
             r#type: "handshake-res".to_string(),
             from_uuid: config::app_uuid(),
             to_uuid: sitem.from_uuid,
-            name: config::name(),
+            name: config::chat().user_name,
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()
         },

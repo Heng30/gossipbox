@@ -39,6 +39,8 @@ pub fn init(ui: &AppWindow) {
 
         config.ui.language = setting_config.ui.language.to_string();
 
+        config.chat.user_name = setting_config.chat.user_name.to_string();
+
         match config::save(config) {
             Err(e) => {
                 ui.global::<Logic>().invoke_show_message(
@@ -58,6 +60,7 @@ pub fn init(ui: &AppWindow) {
 fn init_setting_dialog(ui: Weak<AppWindow>) {
     let ui = ui.unwrap();
     let ui_config = config::ui();
+    let chat_config = config::chat();
 
     let mut setting_dialog = ui.global::<Store>().get_setting_dialog_config();
     setting_dialog.ui.font_size = slint::format!("{}", ui_config.font_size);
@@ -65,6 +68,8 @@ fn init_setting_dialog(ui: Weak<AppWindow>) {
     setting_dialog.ui.win_width = slint::format!("{}", ui_config.win_width);
     setting_dialog.ui.win_height = slint::format!("{}", ui_config.win_height);
     setting_dialog.ui.language = ui_config.language.into();
+
+    setting_dialog.chat.user_name = chat_config.user_name.into();
 
     ui.global::<Store>()
         .set_setting_dialog_config(setting_dialog);

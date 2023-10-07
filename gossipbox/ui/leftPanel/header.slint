@@ -8,54 +8,20 @@ import { Divider } from "../base/divider.slint";
 export component Header inherits Rectangle {
     property<length> label-width: 100px;
     height: Theme.header-height;
+    background: Theme.lighter-border-color;
 
     HorizontalLayout {
         alignment: space-between;
 
-        HorizontalLayout {
-            spacing: Theme.spacing;
-            padding: Theme.padding / 2;
+        VerticalLayout {
+            alignment: center;
             padding-left: Theme.padding;
-            property<bool> is-edit: false;
 
             Text {
                 vertical-alignment: center;
-                text: Store.translator.name-label;
+                text: Store.translator.name-label + "  " + Store.setting-dialog-config.chat.user-name;
                 font-size: Theme.default-font-size - 4px;
             }
-
-            if !is-edit : Rectangle {
-                width: root.label-width;
-                VerticalLayout {
-                    alignment: center;
-                    padding-left: Theme.padding;
-                    padding-right: Theme.padding;
-
-                    Text {
-                        vertical-alignment: center;
-                        text: Store.user-name;
-                        font-size: Theme.default-font-size - 4px;
-                        overflow: elide;
-                    }
-                }
-                ta := TouchArea {
-                    mouse-cursor: self.has-hover ? pointer : default;
-                    clicked => {
-                        is-edit = !is-edit;
-                    }
-                }
-            }
-
-            if is-edit : LineEdit {
-                width: root.label-width;
-                text: Store.user-name;
-                font-size: Theme.default-font-size - 4px;
-                accepted => {
-                    Logic.set-user-name(self.text);
-                    is-edit = !is-edit;
-                }
-            }
-
         }
 
         HorizontalLayout {

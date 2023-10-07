@@ -37,9 +37,14 @@ export struct SettingUI {
     language: string,
 }
 
+export struct SettingChat {
+    user-name: string,
+}
+
 export struct SettingDialogConfig {
     show: bool,
     ui: SettingUI,
+    chat: SettingChat,
 }
 
 export struct AboutDialog {
@@ -83,7 +88,6 @@ export global Store  {
         // },
     ];
 
-    in-out property<string> user-name: "gossip name";
     in-out property<string> current-session-uuid: "session-uuid-1";
     in-out property<MessageItem> message;
     in-out property<OkCancelDialogSetting> ok-cancel-dialog-setting;
@@ -96,6 +100,9 @@ export global Store  {
             win-width: "1200",
             win-height: "600",
             language: "cn",
+        },
+        chat: {
+            user-name: "gossip-user",
         }
     };
 

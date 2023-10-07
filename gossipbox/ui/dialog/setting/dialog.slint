@@ -4,11 +4,12 @@ import { Logic } from "../../logic.slint";
 import { Btn } from "../../base/btn.slint";
 import { Divider } from "../../base/divider.slint";
 import { TabBtn } from "../../base/tab-btn.slint";
-import { UI } from "./ui.slint";
 import { CDialog } from "../../base/cdialog.slint";
+import { UI } from "./ui.slint";
+import { Chat } from "./chat.slint";
 
 export component SettingDialog inherits CDialog {
-    property<string> current-checked-item: "ui";
+    property<string> current-checked-item: "chat";
 
     callback close();
 
@@ -24,33 +25,49 @@ export component SettingDialog inherits CDialog {
             padding: Theme.padding * 2;
             padding-bottom: Theme.padding * 10;
 
-            // HorizontalLayout {
-            //     alignment: space-around;
-            //     height: Theme.default-font-size + Theme.padding * 2;
+            HorizontalLayout {
+                alignment: space-around;
+                height: Theme.default-font-size + Theme.padding * 2;
 
-            //     TabBtn {
-            //         text: Store.translator.setting-dialog-ui;
-            //         icon: @image-url("../../images/setting-fill.svg");
-            //         checked: current-checked-item == "ui";
-            //         clicked => {
-            //             current-checked-item = "ui";
-            //         }
-            //     }
-            // }
+                TabBtn {
+                    text: Store.translator.setting-dialog-ui;
+                    icon: @image-url("../../images/setting-fill.svg");
+                    checked: current-checked-item == "ui";
+                    clicked => {
+                        current-checked-item = "ui";
+                    }
+                }
 
-            // HorizontalLayout {
-            //     alignment: center;
-            //     Divider {
-            //         width: 100%;
-            //     }
-            // }
+                TabBtn {
+                    text: Store.translator.setting-dialog-chat;
+                    icon: @image-url("../../images/chat.svg");
+                    checked: current-checked-item == "chat";
+                    clicked => {
+                        current-checked-item = "chat";
+                    }
+                }
+            }
 
-            ui-tab := UI {
-                visible: current-checked-item == "ui";
-                font-size: Theme.default-font-size / 1px;
-                font-family: Store.setting-dialog-config.ui.font-family;
-                win-width: Theme.default-width / 1px;
-                win-height: Theme.default-height / 1px;
+            HorizontalLayout {
+                alignment: center;
+                Divider {
+                    width: 100%;
+                }
+            }
+
+            Rectangle {
+                ui-tab := UI {
+                    visible: current-checked-item == "ui";
+                    font-size: Theme.default-font-size / 1px;
+                    font-family: Store.setting-dialog-config.ui.font-family;
+                    win-width: Theme.default-width / 1px;
+                    win-height: Theme.default-height / 1px;
+                }
+
+                chat-tab := Chat {
+                    visible: current-checked-item == "chat";
+                    user-name: Store.setting-dialog-config.chat.user-name;
+                }
             }
         }
     }
@@ -64,6 +81,8 @@ export component SettingDialog inherits CDialog {
         ui-tab.win-height = Theme.default-height / 1px;
         ui-tab.set-language(Store.setting-dialog-config.ui.language);
 
+        chat-tab.user-name = Store.setting-dialog-config.chat.user-name;
+
         Store.setting-dialog-config.show = false;
         root.close();
     }
@@ -76,6 +95,9 @@ export component SettingDialog inherits CDialog {
                 win-width: ui-tab.win-width,
                 win-height: ui-tab.win-height,
                 language: ui-tab.language
+            },
+            chat: {
+                user-name: chat-tab.user-name,
             }
         });
 

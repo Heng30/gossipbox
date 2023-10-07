@@ -20,6 +20,10 @@ pub fn ui() -> data::UI {
     CONFIG.lock().unwrap().borrow().ui.clone()
 }
 
+pub fn chat() -> data::Chat {
+    CONFIG.lock().unwrap().borrow().chat.clone()
+}
+
 pub fn swarm() -> data::Swarm {
     CONFIG.lock().unwrap().borrow().swarm.clone()
 }
@@ -30,17 +34,6 @@ pub fn app_uuid() -> String {
 
 pub fn net() -> String {
     CONFIG.lock().unwrap().borrow().net.clone()
-}
-
-pub fn name() -> String {
-    CONFIG.lock().unwrap().borrow().name.clone()
-}
-
-pub fn set_name(name: String) -> CResult {
-    let config = CONFIG.lock().unwrap();
-    let mut config = config.borrow_mut();
-    config.name = name;
-    config.save()
 }
 
 #[allow(dead_code)]
@@ -115,9 +108,9 @@ impl Config {
                 Ok(c) => {
                     self.app_uuid = c.app_uuid;
                     self.net = c.net;
-                    self.name = c.name;
-                    self.ui = c.ui;
                     self.swarm = c.swarm;
+                    self.ui = c.ui;
+                    self.chat = c.chat;
                     Ok(())
                 }
                 Err(e) => Err(anyhow::anyhow!("{}", e.to_string()).into()),

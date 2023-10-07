@@ -15,7 +15,12 @@ use log::{debug, warn};
 use slint::{ComponentHandle, Weak};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
-use tokio::{select, sync::mpsc, task, time::Duration};
+use tokio::{
+    select,
+    sync::mpsc,
+    task,
+    time::{sleep, Duration},
+};
 
 #[derive(NetworkBehaviour)]
 struct CBehaviour {
@@ -124,9 +129,12 @@ async fn start_gossipsub(
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
 
                         let (ui, tx, peer_id) = (ui.clone(), tx.clone(), peer_id.to_string());
-                        let _ = slint::invoke_from_event_loop(move || {
-                            let ui = ui.unwrap();
-                            chat::send_handshake_request(&ui, tx, peer_id);
+                        task::spawn(async move {
+                            sleep(Duration::from_secs(1)).await;
+                            let _ = slint::invoke_from_event_loop(move || {
+                                let ui = ui.unwrap();
+                                chat::send_handshake_request(&ui, tx, peer_id);
+                            });
                         });
                     }
                 },

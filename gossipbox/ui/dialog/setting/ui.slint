@@ -3,7 +3,7 @@ import { Theme } from "../../theme.slint";
 import { Store } from "../../store.slint";
 import { Label } from "../../base/label.slint";
 
-export component UI inherits Rectangle {
+export component UI inherits VerticalLayout {
     in-out property font-size <=> font-size-spin-box.value;
     in-out property font-family <=> fonts-combox.current-value;
     in-out property win-width <=> win-width-lineedit.text;

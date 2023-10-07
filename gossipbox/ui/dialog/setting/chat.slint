@@ -1,0 +1,24 @@
+import { LineEdit } from "std-widgets.slint";
+import { Theme } from "../../theme.slint";
+import { Store } from "../../store.slint";
+import { Label } from "../../base/label.slint";
+
+export component Chat inherits VerticalLayout {
+    in-out property user-name <=> username-le.text;
+
+    VerticalLayout {
+        spacing: Theme.spacing * 4;
+        alignment: start;
+
+        HorizontalLayout {
+            Label {
+                width: Theme.default-label-width;
+                text: Store.translator.setting-dialog-chat-username;
+            }
+
+            username-le := LineEdit {
+                text: Store.setting-dialog-config.chat.user-name;
+            }
+        }
+    }
+}

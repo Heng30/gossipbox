@@ -13,23 +13,22 @@ pub struct Config {
 
     pub app_uuid: String,
     pub net: String,
-    pub name: String,
 
     pub ui: UI,
+    pub chat: Chat,
     pub swarm: Swarm,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        let uuid = Uuid::new_v4().to_string();
         Self {
             config_path: "".to_string(),
             db_path: "".to_string(),
             cache_dir: "".to_string(),
-            app_uuid: uuid.clone(),
+            app_uuid: Uuid::new_v4().to_string(),
             net: "goosip-net".to_string(),
-            name: uuid.split('-').collect::<Vec<_>>()[0].to_string(),
             ui: UI::default(),
+            chat: Chat::default(),
             swarm: Swarm::default(),
         }
     }
@@ -69,6 +68,19 @@ impl Default for Swarm {
             connect_timeout: 30,
             ping_interval: 10,
             keepalive_interval: 10,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Chat {
+    pub user_name: String,
+}
+
+impl Default for Chat {
+    fn default() -> Self {
+        Self {
+            user_name: "gossip-user".to_string(),
         }
     }
 }

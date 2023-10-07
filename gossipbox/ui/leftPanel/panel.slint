@@ -6,7 +6,6 @@ import { Body } from "./body.slint";
 export component LPanel inherits Rectangle {
     width: Theme.left-panel-width;
     clip: true;
-    background: @linear-gradient(0deg, Theme.dark-fill-color 0%, Theme.base-background 100%);
 
     animate width {
         duration: Theme.default-animate-duration;
@@ -14,13 +13,8 @@ export component LPanel inherits Rectangle {
     }
 
     VerticalLayout {
+        spacing: Theme.spacing;
         Header { }
-
-        Divider {
-            width: root.width;
-            background: Theme.base-border-color;
-        }
-
         Body { }
     }
 }

@@ -14,7 +14,6 @@ use libp2p::{
 use log::{debug, warn};
 use slint::{ComponentHandle, Weak};
 use std::collections::hash_map::DefaultHasher;
-use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use tokio::{select, sync::mpsc, task, time::Duration};
 
@@ -98,7 +97,7 @@ async fn start_gossipsub(
     };
 
     swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
-    swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
+    // swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
 
     loop {
         select! {
@@ -120,18 +119,11 @@ async fn start_gossipsub(
             }
             event = swarm.select_next_some() => match event {
                 SwarmEvent::Behaviour(CBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
-                    let mut peer_id_cache = HashSet::new();
                     for (peer_id, _multiaddr) in list {
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
 
-                        let (ui, tx) = (ui.clone(), tx.clone());
-                        let peer_id = peer_id.to_string();
-                        if peer_id_cache.contains(&peer_id) {
-                            continue;
-                        }
-                        peer_id_cache.insert(peer_id.clone());
-
+                        let (ui, tx, peer_id) = (ui.clone(), tx.clone(), peer_id.to_string());
                         let _ = slint::invoke_from_event_loop(move || {
                             let ui = ui.unwrap();
                             chat::send_handshake_request(&ui, tx, peer_id);

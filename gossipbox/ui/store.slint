@@ -4,7 +4,6 @@ import { MDItem } from "./base/data.slint";
 export struct ChatItem {
     type: string,
     text: string,
-    timestamp: string,
 }
 
 export struct ChatSession {
@@ -13,6 +12,7 @@ export struct ChatSession {
     avatar: image,
     status: string,
     unread-count: int,
+    timestamp: string,
     chat-items: [ChatItem]
 }
 
@@ -57,19 +57,24 @@ export struct AboutDialog {
 export global Store  {
     in-out property<[ChatItem]> session-datas: [
         // {
+        //     type: "timestamp",
+        //     text: "2023-12-03 12:03:45",
+        // },
+        // {
         //     type: "uitem",
         //     text: "hello world ejfiwejfwij fwij wijfweifj wiofjw iofjwiofjwe iojfwioj fwjeifjwei ffwiofj wiejf wiofjw ijfwie wejfiwej fiwfjweif jwiefjwif jweif\n wjfiwej iwjwfie ",
-        //     timestamp: "2023-12-03 12:03:45",
         // },
         // {
         //     type: "bitem",
         //     text: "int main()\n{\n    printf('hello world');\n}",
-        //     timestamp: "2023-12-03 12:03:45",
+        // },
+        // {
+        //     type: "timestamp",
+        //     text: "2023-12-03 12:03:45",
         // },
         // {
         //     type: "uitem",
         //     text: "基金法飞机无法及附加",
-        //     timestamp: "2023-12-03 12:03:45",
         // }
     ];
 

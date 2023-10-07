@@ -1,9 +1,12 @@
 use super::{data::SendItem, session};
-use crate::slint_generatedAppWindow::{AppWindow, ChatItem, Logic, Store};
+use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
 use crate::util::translator::tr;
 use crate::{config, util};
+use chrono::Utc;
 use slint::{ComponentHandle, Model, VecModel, Weak};
 use tokio::sync::mpsc;
+
+const TEXT_TIMEOUT: i64 = 300;
 
 pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
     let ui_handle = ui.as_weak();
@@ -15,6 +18,31 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
         let ui = ui_handle.unwrap();
         let suuid = ui.global::<Store>().get_current_session_uuid();
 
+        for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
+            if session.uuid == suuid {
+                let ts = Utc::now().timestamp();
+                if session.chat_items.row_count() == 0_usize
+                    || ts - session.timestamp.parse::<i64>().unwrap_or(0_i64) > TEXT_TIMEOUT
+                {
+                    session
+                        .chat_items
+                        .as_any()
+                        .downcast_ref::<VecModel<ChatItem>>()
+                        .expect("We know we set a VecModel earlier")
+                        .push(ChatItem {
+                            r#type: "timestamp".into(),
+                            text: util::time::local_now("%m-%d %H:%M:%S").into(),
+                        });
+
+                    session.timestamp = slint::format!("{ts}");
+                    ui.global::<Store>()
+                        .get_chat_sessions()
+                        .set_row_data(index, session);
+                }
+                break;
+            }
+        }
+
         ui.global::<Store>()
             .get_session_datas()
             .as_any()
@@ -23,7 +51,6 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             .push(ChatItem {
                 r#type: "uitem".into(),
                 text: text.clone(),
-                timestamp: util::time::local_now("%m-%d %H:%M:%S").into(),
                 ..Default::default()
             });
 
@@ -147,6 +174,21 @@ fn handle_plain_text(ui: &AppWindow, msg: String) {
     let cur_suuid = ui.global::<Store>().get_current_session_uuid();
     for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
         if session.uuid.as_str() == sitem.from_uuid.as_str() {
+            let ts = Utc::now().timestamp();
+            if session.chat_items.row_count() == 0_usize
+                || ts - session.timestamp.parse::<i64>().unwrap_or(0_i64) > TEXT_TIMEOUT
+            {
+                session
+                    .chat_items
+                    .as_any()
+                    .downcast_ref::<VecModel<ChatItem>>()
+                    .expect("We know we set a VecModel earlier")
+                    .push(ChatItem {
+                        r#type: "timestamp".into(),
+                        text: util::time::local_now("%m-%d %H:%M:%S").into(),
+                    });
+            }
+
             session
                 .chat_items
                 .as_any()
@@ -155,14 +197,15 @@ fn handle_plain_text(ui: &AppWindow, msg: String) {
                 .push(ChatItem {
                     r#type: "bitem".into(),
                     text: sitem.text.into(),
-                    timestamp: util::time::local_now("%m-%d %H:%M:%S").into(),
                 });
 
+            session.timestamp = slint::format!("{ts}");
             if session.uuid != cur_suuid {
                 session.unread_count = session.unread_count + 1;
             } else {
                 session.unread_count = 0;
             }
+
             ui.global::<Store>()
                 .get_chat_sessions()
                 .set_row_data(index, session);
@@ -170,6 +213,17 @@ fn handle_plain_text(ui: &AppWindow, msg: String) {
             return;
         }
     }
+}
+
+#[allow(dead_code)]
+fn get_session(ui: &AppWindow, suuid: &slint::SharedString) -> Option<ChatSession> {
+    for session in ui.global::<Store>().get_chat_sessions().iter() {
+        if session.uuid == suuid {
+            return Some(session);
+        }
+    }
+
+    None
 }
 
 pub fn send_handshake_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, peer_id: String) {

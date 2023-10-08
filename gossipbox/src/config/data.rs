@@ -75,12 +75,14 @@ impl Default for Swarm {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Chat {
     pub user_name: String,
+    pub user_status: String,
 }
 
 impl Default for Chat {
     fn default() -> Self {
         Self {
-            user_name: "gossip-user".to_string(),
+            user_name: "匿名用户".to_string(),
+            user_status: "在线".to_string(),
         }
     }
 }

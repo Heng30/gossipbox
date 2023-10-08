@@ -4,6 +4,7 @@ pub struct SendItem {
     pub from_uuid: String,
     pub to_uuid: String,
     pub name: String,
+    pub status: String,
     pub text: String,
     pub timestamp: u128,
 }

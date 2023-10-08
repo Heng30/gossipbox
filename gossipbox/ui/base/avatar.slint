@@ -3,8 +3,11 @@ import { Theme } from "../theme.slint";
 export component Avatar inherits Rectangle {
     in-out property icon-colorize <=> img.colorize;
     in-out property icon-source <=> img.source;
+    in-out property<float> icon-size-rate: 0.7;
 
-    width: Theme.icon-size;
+    callback clicked <=> touch.clicked;
+
+    width: Theme.avatar-size;
     height: self.width;
     border-radius: self.height / 2;
     border-width: 1px;
@@ -17,7 +20,7 @@ export component Avatar inherits Rectangle {
     }
 
     img := Image {
-        width: Theme.icon-size * 0.7;
+        width: Theme.icon-size * icon-size-rate;
         height: self.width;
         image-fit: ImageFit.contain;
         colorize: Theme.avatar-color;

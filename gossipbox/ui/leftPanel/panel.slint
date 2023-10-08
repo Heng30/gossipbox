@@ -7,6 +7,8 @@ export component LPanel inherits Rectangle {
     width: Theme.left-panel-width;
     clip: true;
 
+    callback avatar-clicked <=> header.avatar-clicked;
+
     animate width {
         duration: Theme.default-animate-duration;
         easing: ease-in-out;
@@ -14,7 +16,7 @@ export component LPanel inherits Rectangle {
 
     VerticalLayout {
         spacing: Theme.spacing;
-        Header { }
+        header := Header { }
         Body { }
     }
 }

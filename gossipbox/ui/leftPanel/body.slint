@@ -5,31 +5,12 @@ import { IconBtn } from "../base/icon-btn.slint";
 import { IconBtn } from "../base/icon-btn.slint";
 import { Brand } from "../base/brand.slint";
 import { CenterLayout } from "../base/center-layout.slint";
+import { PFunc } from "./func.slint";
 
 export component Body inherits Rectangle {
     private property<length> item-height: Theme.default-font-size + Theme.padding * 6;
 
     background: @linear-gradient(0deg, Theme.dark-fill-color 0%, Theme.base-background 100%);
-
-    pure function get-status(status: string) -> string {
-        if (status == "online") {
-            return Store.translator.online;
-        } else if (status == "offline") {
-            return Store.translator.offline;
-        }
-
-        return status;
-    }
-
-    pure function get-status-color(status: string) -> color {
-        if (status == "online") {
-            return Theme.success-color;
-        } else if (status == "offline") {
-            return Theme.warning-color;
-        }
-
-        return Theme.brand-color;
-    }
 
     VerticalLayout {
         alignment: end;
@@ -88,8 +69,8 @@ export component Body inherits Rectangle {
 
                     status-txt := Text {
                         vertical-alignment: center;
-                        color: root.get-status-color(data.status);
-                        text: data.unread-count + "    " + root.get-status(data.status);
+                        color: PFunc.get-status-color(data.status);
+                        text: data.unread-count + "    " + PFunc.get-status(data.status);
                         font-size: name-txt.font-size - 4px;
                     }
                 }

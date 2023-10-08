@@ -62,6 +62,7 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
                 from_uuid: config::app_uuid(),
                 to_uuid: suuid.to_string(),
                 name: config::chat().user_name,
+                status: config::chat().user_status,
                 text: text.to_string(),
                 timestamp: util::time::timestamp_millisecond(),
                 ..Default::default()
@@ -199,6 +200,7 @@ fn handle_plain_text(ui: &AppWindow, msg: String) {
                     text: sitem.text.into(),
                 });
 
+            session.status = sitem.status.into();
             session.timestamp = slint::format!("{ts}");
             if session.uuid != cur_suuid {
                 session.unread_count = session.unread_count + 1;
@@ -234,6 +236,7 @@ pub fn send_handshake_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>,
             r#type: "handshake-req".to_string(),
             from_uuid: config::app_uuid(),
             name: config::chat().user_name,
+            status: config::chat().user_status,
             text: peer_id.to_string(),
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()
@@ -249,6 +252,7 @@ pub fn send_flush_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             r#type: "flush-req".to_string(),
             from_uuid: config::app_uuid(),
             name: config::chat().user_name,
+            status: config::chat().user_status,
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()
         },
@@ -264,6 +268,7 @@ fn handle_flush_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, sitem
             from_uuid: config::app_uuid(),
             to_uuid: sitem.from_uuid,
             name: config::chat().user_name,
+            status: config::chat().user_status,
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()
         },
@@ -285,6 +290,7 @@ fn handle_handshake_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, s
             from_uuid: config::app_uuid(),
             to_uuid: sitem.from_uuid,
             name: config::chat().user_name,
+            status: config::chat().user_status,
             timestamp: util::time::timestamp_millisecond(),
             ..Default::default()
         },

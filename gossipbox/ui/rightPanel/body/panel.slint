@@ -57,12 +57,10 @@ export component Body inherits Rectangle {
         lv.viewport-y <= -lv.viewport-height + (lv.visible-height * 1.2);
     }
 
-    CenterLayout {
-        NoMessageImg {
-            visible: Store.session-datas.length <= 0;
-            width: 500px;
-            text: Store.translator.no-message;
-        }
+    NoMessageImg {
+        visible: Store.session-datas.length <= 0;
+        width: 500px;
+        text: Store.translator.no-message;
     }
 
     lv := ListView {

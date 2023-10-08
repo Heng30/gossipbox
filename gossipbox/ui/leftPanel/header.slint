@@ -1,36 +1,63 @@
-import { LineEdit } from "std-widgets.slint";
+import { LineEdit, ComboBox } from "std-widgets.slint";
 import { Theme } from "../theme.slint";
 import { Store } from "../store.slint";
 import { Logic } from "../logic.slint";
 import { IconBtn } from "../base/icon-btn.slint";
 import { Divider } from "../base/divider.slint";
+import { Avatar } from "../base/avatar.slint";
+import { CenterLayout } from "../base/center-layout.slint";
+import { PFunc } from "./func.slint";
 
 export component Header inherits Rectangle {
-    property<length> label-width: 100px;
     height: Theme.header-height;
     background: Theme.lighter-border-color;
+
+    callback avatar-clicked <=> avatar.clicked;
 
     HorizontalLayout {
         alignment: space-between;
 
-        VerticalLayout {
-            alignment: center;
+        HorizontalLayout {
+            alignment: start;
             padding-left: Theme.padding;
+            spacing: Theme.spacing * 2;
 
-            Text {
-                vertical-alignment: center;
-                text: Store.translator.name-label + "  " + Store.setting-dialog-config.chat.user-name;
-                font-size: Theme.default-font-size - 2px;
+            CenterLayout {
+                avatar := Avatar {
+                    width: root.height * 0.8;
+                    icon-size-rate: 1;
+                    icon-source: Store.setting-dialog-config.chat.user-avatar;
+                }
+            }
+
+            VerticalLayout {
+                Text {
+                    vertical-alignment: center;
+                    color: Theme.brand-color.darker(100%);
+                    text: Store.translator.name-label + "  " + Store.setting-dialog-config.chat.user-name;
+                    font-size: Theme.default-font-size - 2px;
+                }
+
+
+                Text {
+                    vertical-alignment: center;
+                    font-size: Theme.default-font-size - 2px;
+                    color: PFunc.get-status-color(Store.setting-dialog-config.chat.user-status).darker(50%);
+                    text: Store.translator.status-label + "  " + PFunc.get-status(Store.setting-dialog-config.chat.user-status);
+                }
+
             }
         }
 
         HorizontalLayout {
+            padding-right: Theme.padding;
             VerticalLayout {
                 alignment: center;
                 HorizontalLayout {
                     IconBtn {
+                        width: Theme.icon-size * 1.33;
+                        icon-width: Theme.icon-size * 0.8;
                         icon: @image-url("../images/reset.svg");
-                        icon-width: Theme.icon-size * 0.7;
                         tip-pos: "left";
                         tip-text: Store.translator.tip-flush-session;
                         clicked => {
@@ -57,6 +84,7 @@ export component Header inherits Rectangle {
                 HorizontalLayout {
                     spacing: Theme.spacing * 2;
                     IconBtn {
+                        width: Theme.icon-size * 1.33;
                         icon: @image-url("../images/setting-fill.svg");
                         tip-pos: "left";
                         tip-text: Store.translator.tip-setting;
@@ -66,6 +94,7 @@ export component Header inherits Rectangle {
                     }
 
                     IconBtn {
+                        width: Theme.icon-size * 1.33;
                         icon: @image-url("../images/help.svg");
                         tip-pos: "left";
                         tip-text: Store.translator.tip-help;
@@ -75,6 +104,7 @@ export component Header inherits Rectangle {
                     }
 
                     IconBtn {
+                        width: Theme.icon-size * 1.33;
                         icon: @image-url("../images/info-dark.svg");
                         tip-pos: "left";
                         tip-text: Store.translator.tip-about;

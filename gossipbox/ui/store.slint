@@ -39,6 +39,8 @@ export struct SettingUI {
 
 export struct SettingChat {
     user-name: string,
+    user-status: string,
+    user-avatar: image,
 }
 
 export struct SettingDialogConfig {
@@ -82,13 +84,25 @@ export global Store  {
         // {
         //     name: "会话1",
         //     uuid: "session-uuid-1",
-        //     status: "online",
+        //     status: "Online",
         //     unread-count: 10,
         // },
         // {
         //     name: "会话2",
         //     uuid: "session-uuid-2",
-        //     status: "offline",
+        //     status: "Offline",
+        //     unread-count: 2,
+        // },
+        // {
+        //     name: "会话3",
+        //     uuid: "session-uuid-3",
+        //     status: "Busy",
+        //     unread-count: 2,
+        // },
+        // {
+        //     name: "会话4",
+        //     uuid: "session-uuid-4",
+        //     status: "Idle",
         //     unread-count: 2,
         // },
     ];
@@ -108,6 +122,8 @@ export global Store  {
         },
         chat: {
             user-name: "gossip-user",
+            user-status: "Online",
+            user-avatar: @image-url("./images/skull.svg"),
         }
     };
 

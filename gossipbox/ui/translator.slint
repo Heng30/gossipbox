@@ -16,8 +16,11 @@ export struct Translation {
     reset-or-not: string,
 
     name-label: string,
+    status-label: string,
     online: string,
     offline: string,
+    busy: string,
+    idle: string,
 
     setting-dialog-ui: string,
     setting-dialog-ui-font-size: string,
@@ -29,6 +32,10 @@ export struct Translation {
 
     setting-dialog-chat: string,
     setting-dialog-chat-username: string,
+    setting-dialog-chat-status: string,
+    setting-dialog-chat-online: string,
+    setting-dialog-chat-busy: string,
+    setting-dialog-chat-idle: string,
 
     no-data: string,
     no-message: string,
@@ -81,8 +88,11 @@ export global Translator {
             reset-or-not: is-cn ? "是否重置？" : "Reset or not?",
 
             name-label: is-cn ? "昵称:" : "Name:",
-            online: is-cn ? "在线" : "online",
-            offline: is-cn ? "离线" : "offline",
+            status-label: is-cn ? "状态:" : "Status:",
+            online: is-cn ? "在线" : "Online",
+            offline: is-cn ? "离线" : "Offline",
+            busy: is-cn ? "正忙" : "Busy",
+            idle: is-cn ? "空闲" : "Idle",
 
             setting-dialog-ui: is-cn ? "界面" : "UI",
             setting-dialog-ui-font-size: is-cn ? "字体大小:" : "Font Size:",
@@ -94,6 +104,10 @@ export global Translator {
 
             setting-dialog-chat: is-cn ? "会话" : "Chat",
             setting-dialog-chat-username: is-cn ? "昵称:" : "Nickname",
+            setting-dialog-chat-status: is-cn ? "状态:" : "Status:",
+            setting-dialog-chat-online: is-cn ? "在线" : "Online",
+            setting-dialog-chat-busy: is-cn ? "正忙" : "Busy",
+            setting-dialog-chat-idle: is-cn ? "空闲" : "Idle",
 
             no-data: is-cn ? "没有数据" : "No Data",
             no-message: is-cn ? "没有信息" : "No Message",

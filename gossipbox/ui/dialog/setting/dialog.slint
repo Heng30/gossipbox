@@ -13,9 +13,13 @@ export component SettingDialog inherits CDialog {
 
     callback close();
 
+    public function show-chat-setting() {
+        current-checked-item = "chat";
+    }
+
     visible: Store.setting-dialog-config.show;
     title: Store.translator.setting;
-    width: 1000px;
+    width: 800px;
 
     VerticalLayout {
         alignment: start;
@@ -67,6 +71,7 @@ export component SettingDialog inherits CDialog {
                 chat-tab := Chat {
                     visible: current-checked-item == "chat";
                     user-name: Store.setting-dialog-config.chat.user-name;
+                    user-status: Store.setting-dialog-config.chat.user-status;
                 }
             }
         }
@@ -82,6 +87,7 @@ export component SettingDialog inherits CDialog {
         ui-tab.set-language(Store.setting-dialog-config.ui.language);
 
         chat-tab.user-name = Store.setting-dialog-config.chat.user-name;
+        chat-tab.user-status = Store.setting-dialog-config.chat.user-status;
 
         Store.setting-dialog-config.show = false;
         root.close();
@@ -98,6 +104,7 @@ export component SettingDialog inherits CDialog {
             },
             chat: {
                 user-name: chat-tab.user-name,
+                user-status: chat-tab.user-status,
             }
         });
 

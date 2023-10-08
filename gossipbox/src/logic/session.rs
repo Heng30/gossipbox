@@ -56,7 +56,7 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             .invoke_show_message(tr("刷新...").into(), "info".into());
 
         for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
-            session.status = "offline".into();
+            session.status = "Offline".into();
             ui.global::<Store>()
                 .get_chat_sessions()
                 .set_row_data(index, session);
@@ -73,7 +73,7 @@ pub fn add_session(ui: &AppWindow, sitem: SendItem) {
     for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
         if session.uuid.as_str() == sitem.from_uuid.as_str() {
             session.name = sitem.name.into();
-            session.status = "online".into();
+            session.status = tr(sitem.status.as_str()).into();
 
             ui.global::<Store>()
                 .get_chat_sessions()
@@ -92,7 +92,7 @@ pub fn add_session(ui: &AppWindow, sitem: SendItem) {
         .push(ChatSession {
             uuid: sitem.from_uuid.as_str().into(),
             name: sitem.name.into(),
-            status: "online".into(),
+            status: tr(sitem.status.as_str()).into(),
             chat_items: chat_items.clone(),
             ..Default::default()
         });

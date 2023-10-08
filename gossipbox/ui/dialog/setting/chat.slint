@@ -1,10 +1,11 @@
-import { LineEdit } from "std-widgets.slint";
+import { LineEdit, ComboBox } from "std-widgets.slint";
 import { Theme } from "../../theme.slint";
 import { Store } from "../../store.slint";
 import { Label } from "../../base/label.slint";
 
 export component Chat inherits VerticalLayout {
     in-out property user-name <=> username-le.text;
+    in-out property user-status <=> status-combox.current-value;
 
     VerticalLayout {
         spacing: Theme.spacing * 4;
@@ -18,6 +19,19 @@ export component Chat inherits VerticalLayout {
 
             username-le := LineEdit {
                 text: Store.setting-dialog-config.chat.user-name;
+            }
+        }
+
+        HorizontalLayout {
+            Label {
+                width: Theme.default-label-width;
+                text: Store.translator.setting-dialog-chat-status;
+            }
+
+            status-combox := ComboBox {
+                model: [Store.translator.setting-dialog-chat-online, Store.translator.setting-dialog-chat-busy, Store.translator.setting-dialog-chat-idle];
+                current-value: self.model[0];
+                current-index: 0;
             }
         }
     }

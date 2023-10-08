@@ -57,7 +57,12 @@ export component AppWindow inherits Window {
         }
 
         HorizontalLayout {
-            LPanel {}
+            LPanel {
+                avatar-clicked => {
+                    Store.setting-dialog-config.show = true;
+                    setting-dialog.show-chat-setting();
+                }
+            }
             rpanel := RPanel { }
         }
 

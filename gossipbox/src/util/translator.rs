@@ -22,6 +22,9 @@ pub fn tr(text: &str) -> String {
     items.insert("发送失败", "Send failed");
     items.insert("正在重试...", "Retrying...");
     items.insert("刷新...", "Flush...");
+    items.insert("在线", "Online");
+    items.insert("正忙", "Busy");
+    items.insert("空闲", "Idle");
 
     if let Some(txt) = items.get(text) {
         return txt.to_string();

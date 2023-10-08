@@ -40,6 +40,7 @@ pub fn init(ui: &AppWindow) {
         config.ui.language = setting_config.ui.language.to_string();
 
         config.chat.user_name = setting_config.chat.user_name.to_string();
+        config.chat.user_status = setting_config.chat.user_status.to_string();
 
         match config::save(config) {
             Err(e) => {
@@ -70,6 +71,7 @@ fn init_setting_dialog(ui: Weak<AppWindow>) {
     setting_dialog.ui.language = ui_config.language.into();
 
     setting_dialog.chat.user_name = chat_config.user_name.into();
+    setting_dialog.chat.user_status = chat_config.user_status.into();
 
     ui.global::<Store>()
         .set_setting_dialog_config(setting_dialog);

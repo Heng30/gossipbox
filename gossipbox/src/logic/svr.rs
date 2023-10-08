@@ -3,13 +3,13 @@ use crate::slint_generatedAppWindow::{AppWindow, Logic};
 use crate::util::translator::tr;
 use crate::{chat, config, SendCB};
 use anyhow::{anyhow, Result};
-use futures::{future::Either, stream::StreamExt};
+use futures::stream::StreamExt;
 use libp2p::{
-    core::{muxing::StreamMuxerBox, transport::OrTransport, upgrade},
-    gossipsub, identity, mdns, noise, quic,
+    core::{muxing::StreamMuxerBox, transport::OptionalTransport},
+    gossipsub, identity, mdns, quic,
     swarm::NetworkBehaviour,
     swarm::{SwarmBuilder, SwarmEvent},
-    tcp, yamux, PeerId, Transport,
+    PeerId, Transport,
 };
 use log::{debug, warn};
 use slint::{ComponentHandle, Weak};
@@ -53,22 +53,10 @@ async fn start_gossipsub(
     let local_peer_id = PeerId::from(id_keys.public());
     let lp_id = local_peer_id.to_string();
 
-    let tcp_transport = tcp::tokio::Transport::new(tcp::Config::default().nodelay(true))
-        .upgrade(upgrade::Version::V1Lazy)
-        .authenticate(noise::Config::new(&id_keys).map_err(|e| {
-            anyhow!(format!(
-                "signing libp2p-noise static keypair. Error: {:?}",
-                e
-            ))
-        })?)
-        .multiplex(yamux::Config::default())
-        .timeout(Duration::from_secs(swarm_conf.connect_timeout))
-        .boxed();
     let quic_transport = quic::tokio::Transport::new(quic::Config::new(&id_keys));
-    let transport = OrTransport::new(quic_transport, tcp_transport)
+    let transport = OptionalTransport::some(quic_transport)
         .map(|either_output, _| match either_output {
-            Either::Left((peer_id, muxer)) => (peer_id, StreamMuxerBox::new(muxer)),
-            Either::Right((peer_id, muxer)) => (peer_id, StreamMuxerBox::new(muxer)),
+            (peer_id, muxer) => (peer_id, StreamMuxerBox::new(muxer)),
         })
         .boxed();
 
@@ -102,7 +90,6 @@ async fn start_gossipsub(
     };
 
     swarm.listen_on("/ip4/0.0.0.0/udp/0/quic-v1".parse()?)?;
-    // swarm.listen_on("/ip4/0.0.0.0/tcp/0".parse()?)?;
 
     loop {
         select! {

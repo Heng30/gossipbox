@@ -10,4 +10,5 @@ pub mod session;
 pub mod setting;
 pub mod util;
 pub mod window;
+pub mod svr;
 pub use data::SendItem;

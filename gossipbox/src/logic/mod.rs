@@ -11,4 +11,5 @@ pub mod setting;
 pub mod util;
 pub mod window;
 pub mod svr;
+pub mod ping;
 pub use data::SendItem;

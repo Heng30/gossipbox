@@ -21,7 +21,7 @@ mod logic;
 mod util;
 mod version;
 
-use logic::{about, chat, clipboard, message, ok_cancel_dialog, session, setting, window, svr};
+use logic::{about, chat, clipboard, message, ok_cancel_dialog, session, setting, window, svr, ping};
 
 pub type CResult = Result<(), Box<dyn std::error::Error>>;
 pub type SendCB = fn (ui: Weak<AppWindow>, tx: mpsc::UnboundedSender<String>, msg: String, local_peer_id: String);
@@ -39,6 +39,7 @@ async fn main() -> CResult {
 
     let tx = svr::init(ui.as_weak(), chat::recv_cb);
 
+    ping::init(tx.clone());
     clipboard::init(&ui);
     message::init(&ui);
     session::init(&ui, tx.clone());

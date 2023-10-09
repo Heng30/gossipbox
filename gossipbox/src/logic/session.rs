@@ -1,18 +1,11 @@
 use super::chat;
 use super::data::SendItem;
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
-use crate::{config, util, util::translator::tr};
-use log::warn;
+use crate::util::translator::tr;
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
-use tokio::{
-    sync::mpsc,
-    task,
-    time::{sleep, Duration},
-};
+use tokio::sync::mpsc;
 
 pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
-    ping_timer(tx.clone());
-
     let ui_handle = ui.as_weak();
     ui.global::<Logic>()
         .on_reset_current_session_chats(move || {
@@ -102,26 +95,4 @@ pub fn add_session(ui: &AppWindow, sitem: SendItem) {
         ui.global::<Store>()
             .set_current_session_uuid(sitem.from_uuid.as_str().into());
     }
-}
-
-fn ping_timer(tx: mpsc::UnboundedSender<String>) {
-    task::spawn(async move {
-        let swarm_conf = config::swarm();
-        loop {
-            if let Ok(text) = serde_json::to_string(&SendItem {
-                r#type: "ping".to_string(),
-                timestamp: util::time::timestamp_millisecond(),
-                ..Default::default()
-            }) {
-                let (tx, text) = (tx.clone(), text.clone());
-                let _ = slint::invoke_from_event_loop(move || {
-                    if let Err(e) = tx.send(text) {
-                        warn!("{e:?}");
-                    }
-                });
-            }
-
-            sleep(Duration::from_secs(swarm_conf.ping_interval)).await;
-        }
-    });
 }

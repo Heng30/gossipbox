@@ -1,8 +1,9 @@
 use crate::logic::SendItem;
 use crate::slint_generatedAppWindow::{AppWindow, Logic};
 use crate::util::translator::tr;
-use crate::{chat, config, SendCB};
+use crate::{chat, config, logic, SendCB};
 use anyhow::{anyhow, Result};
+use chrono::Utc;
 use futures::stream::StreamExt;
 use libp2p::{
     core::{muxing::StreamMuxerBox, transport::OptionalTransport},
@@ -108,6 +109,8 @@ async fn start_gossipsub(
                         }
                     });
                 }
+
+                logic::ping::set_timestimp(Utc::now().timestamp());
             }
             event = swarm.select_next_some() => match event {
                 SwarmEvent::Behaviour(CBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
@@ -147,6 +150,7 @@ async fn start_gossipsub(
                     let _ = slint::invoke_from_event_loop(move || {
                         cb(ui,tx, msg, local_peer_id);
                     });
+                    logic::ping::set_timestimp(Utc::now().timestamp());
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");

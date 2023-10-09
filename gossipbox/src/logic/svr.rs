@@ -15,6 +15,7 @@ use libp2p::{
 use log::{debug, warn};
 use slint::{ComponentHandle, Weak};
 use std::collections::hash_map::DefaultHasher;
+use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 use tokio::{
     select,
@@ -114,7 +115,13 @@ async fn start_gossipsub(
             }
             event = swarm.select_next_some() => match event {
                 SwarmEvent::Behaviour(CBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
+                    let mut pids = HashSet::new();
                     for (peer_id, _multiaddr) in list {
+                        if pids.contains(&peer_id.to_string()) {
+                            continue;
+                        }
+                        pids.insert(peer_id.to_string());
+
                         debug!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
 

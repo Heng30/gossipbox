@@ -44,6 +44,13 @@ pub fn path() -> (String, String) {
     (conf.config_path.clone(), conf.db_path.clone())
 }
 
+pub fn cache_dir() -> String {
+    let conf = CONFIG.lock().unwrap();
+    let conf = conf.borrow();
+
+    conf.cache_dir.clone()
+}
+
 pub fn config() -> data::Config {
     CONFIG.lock().unwrap().borrow().clone()
 }

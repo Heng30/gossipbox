@@ -2,9 +2,14 @@ use super::{data::SendItem, session};
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
 use crate::util::translator::tr;
 use crate::{config, util};
+use std::path::Path;
+use base64;
 use chrono::Utc;
 use slint::{ComponentHandle, Model, VecModel, Weak};
+use std::fs::File;
+use std::io::{Read, Write};
 use tokio::sync::mpsc;
+use uuid::Uuid;
 
 const TEXT_TIMEOUT: i64 = 300;
 
@@ -32,6 +37,7 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
                         .push(ChatItem {
                             r#type: "timestamp".into(),
                             text: util::time::local_now("%m-%d %H:%M:%S").into(),
+                            ..Default::default()
                         });
 
                     session.timestamp = slint::format!("{ts}");
@@ -150,16 +156,15 @@ pub fn recv_cb(
             match sitem.r#type.as_str() {
                 "handshake-res" => handle_handshake_respond(&ui, sitem),
                 "flush-res" => handle_flush_respond(&ui, sitem),
-                "plain" => handle_plain_text(&ui, msg),
+                "plain" => handle_plain_text(&ui, sitem),
+                "image" => handle_image(&ui, sitem),
                 _ => (),
             }
         }
     }
 }
 
-fn handle_plain_text(ui: &AppWindow, msg: String) {
-    let sitem = SendItem::from(msg.as_str());
-
+fn handle_plain_text(ui: &AppWindow, sitem: SendItem) {
     let mut is_exist = false;
     for session in ui.global::<Store>().get_chat_sessions().iter() {
         if session.uuid.as_str() == sitem.from_uuid.as_str() {
@@ -187,6 +192,7 @@ fn handle_plain_text(ui: &AppWindow, msg: String) {
                     .push(ChatItem {
                         r#type: "timestamp".into(),
                         text: util::time::local_now("%m-%d %H:%M:%S").into(),
+                        ..Default::default()
                     });
             }
 
@@ -198,6 +204,7 @@ fn handle_plain_text(ui: &AppWindow, msg: String) {
                 .push(ChatItem {
                     r#type: "bitem".into(),
                     text: sitem.text.into(),
+                    ..Default::default()
                 });
 
             session.status = sitem.status.into();
@@ -299,4 +306,80 @@ fn handle_handshake_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, s
 
 fn handle_handshake_respond(ui: &AppWindow, sitem: SendItem) {
     session::add_session(ui, sitem);
+}
+
+fn handle_image(ui: &AppWindow, sitem: SendItem) {
+    match base64::decode(&sitem.text) {
+        Ok(data) => {
+            let name = Uuid::new_v4().to_string();
+            let img_path = Path::new(&config::cache_dir()).join(name);
+
+            match File::create(img_path) {
+                Ok(mut ofile) => match ofile.write_all(&data) {
+                    Err(e) => {
+                        ui.global::<Logic>().invoke_show_message(
+                            slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
+                            "warning".into(),
+                        );
+                    }
+                    _ => {
+                        //  TODO: show image
+                    }
+                },
+                Err(e) => {
+                    ui.global::<Logic>().invoke_show_message(
+                        slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
+                        "warning".into(),
+                    );
+                }
+            }
+        }
+        Err(e) => {
+            ui.global::<Logic>().invoke_show_message(
+                slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
+                "warning".into(),
+            );
+        }
+    }
+}
+
+fn send_image(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, path: &str) {
+    let suuid = ui.global::<Store>().get_current_session_uuid();
+    match File::open(path) {
+        Ok(mut file) => {
+            let mut buffer = Vec::new();
+            match file.read_to_end(&mut buffer) {
+                Err(e) => {
+                    ui.global::<Logic>().invoke_show_message(
+                        slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
+                        "warning".into(),
+                    );
+                }
+
+                _ => {
+                    //  TODO: show image
+                    send_text(
+                        ui,
+                        tx,
+                        SendItem {
+                            r#type: "image".to_string(),
+                            from_uuid: config::app_uuid(),
+                            to_uuid: suuid.to_string(),
+                            name: config::chat().user_name,
+                            status: config::chat().user_status,
+                            text: base64::encode(&buffer),
+                            timestamp: util::time::timestamp_millisecond(),
+                            ..Default::default()
+                        },
+                    );
+                }
+            }
+        }
+        Err(e) => {
+            ui.global::<Logic>().invoke_show_message(
+                slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
+                "warning".into(),
+            );
+        }
+    }
 }

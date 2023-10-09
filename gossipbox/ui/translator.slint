@@ -66,6 +66,9 @@ export struct Translation {
     tip-show: string,
     tip-hide: string,
     tip-flush-session: string,
+    tip-zoom-out: string,
+    tip-zoom-in: string,
+    tip-download: string,
 }
 
 export global Translator {
@@ -138,6 +141,9 @@ export global Translator {
             tip-show: is-cn ? "显示" : "Show",
             tip-hide: is-cn ? "隐藏" : "Hide",
             tip-flush-session: is-cn ? "刷新列表" : "Flush session",
+            tip-zoom-out: is-cn ? "缩小" : "Zoom Out",
+            tip-zoom-in: is-cn ? "放大" : "Zoom In",
+            tip-download: is-cn ? "下载" : "Download",
         };
     }
 }

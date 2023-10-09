@@ -5,6 +5,8 @@ import { Logic } from "../../logic.slint";
 import { UItem } from "./uitem.slint";
 import { BItem } from "./bitem.slint";
 import { Timestamp } from "./timestamp.slint";
+import { UImage } from "./uimage.slint";
+import { BImage } from "./bimage.slint";
 import { NoMessageImg } from "../../base/no-message.slint";
 import { CenterLayout } from "../../base/center-layout.slint";
 
@@ -73,13 +75,20 @@ export component Body inherits Rectangle {
             if data.type == "timestamp" : Timestamp {
                 text: data.text;
             }
-
             if data.type == "uitem" : UItem {
                 text: data.text;
             }
 
             if data.type == "bitem" : BItem {
                 text: data.text;
+            }
+
+            if data.type == "uimage": UImage {
+                image: data.img;
+            }
+
+            if data.type == "bimage": BImage {
+                image: data.img;
             }
         }
     }

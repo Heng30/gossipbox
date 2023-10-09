@@ -4,6 +4,8 @@ import { MDItem } from "./base/data.slint";
 export struct ChatItem {
     type: string,
     text: string,
+    img: image,
+    img-name: string,
 }
 
 export struct ChatSession {
@@ -61,6 +63,14 @@ export global Store  {
         // {
         //     type: "timestamp",
         //     text: "2023-12-03 12:03:45",
+        // },
+        // {
+        //     type: "uimage",
+        //     img: @image-url("./images/icon.png"),
+        // },
+        // {
+        //     type: "bimage",
+        //     img: @image-url("./images/icon.png"),
         // },
         // {
         //     type: "uitem",

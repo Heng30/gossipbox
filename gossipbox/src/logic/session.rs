@@ -1,7 +1,8 @@
 use super::chat;
-use super::data::SendItem;
+use super::data::MsgItem;
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
 use crate::util::translator::tr;
+use log::info;
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use tokio::sync::mpsc;
 
@@ -62,11 +63,13 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
     });
 }
 
-pub fn add_session(ui: &AppWindow, sitem: SendItem) {
+pub fn add_session(ui: &AppWindow, sitem: &MsgItem) {
     for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
         if session.uuid.as_str() == sitem.from_uuid.as_str() {
-            session.name = sitem.name.into();
+            session.name = sitem.name.as_str().into();
             session.status = tr(sitem.status.as_str()).into();
+
+            info!("update session {}", &session.name);
 
             ui.global::<Store>()
                 .get_chat_sessions()
@@ -76,6 +79,8 @@ pub fn add_session(ui: &AppWindow, sitem: SendItem) {
         }
     }
 
+    info!("add session {}", &sitem.name);
+
     let chat_items = ModelRc::new(VecModel::default());
     ui.global::<Store>()
         .get_chat_sessions()
@@ -84,7 +89,7 @@ pub fn add_session(ui: &AppWindow, sitem: SendItem) {
         .expect("We know we set a VecModel earlier")
         .push(ChatSession {
             uuid: sitem.from_uuid.as_str().into(),
-            name: sitem.name.into(),
+            name: sitem.name.as_str().into(),
             status: tr(sitem.status.as_str()).into(),
             chat_items: chat_items.clone(),
             ..Default::default()

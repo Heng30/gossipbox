@@ -1,9 +1,7 @@
-use crate::logic::SendItem;
 use crate::slint_generatedAppWindow::{AppWindow, Logic};
 use crate::util::translator::tr;
-use crate::{chat, config, logic, SendCB};
+use crate::{chat, config, SendCB};
 use anyhow::{anyhow, Result};
-use chrono::Utc;
 use futures::stream::StreamExt;
 use libp2p::{
     core::{muxing::StreamMuxerBox, transport::OptionalTransport},
@@ -103,27 +101,26 @@ async fn start_gossipsub(
                     .publish(topic.clone(), msg.as_bytes()) {
                     let (ui, estr) = (ui.clone(), e.to_string());
                     let _ = slint::invoke_from_event_loop(move || {
-                        let sitem = SendItem::from(msg.as_str());
-                        if sitem.r#type != "ping" {
+                        if !msg.starts_with("ping") {
                             ui.unwrap().global::<Logic>()
                                 .invoke_show_message(slint::format!("{}. {}: {:?}", tr("发送失败"), tr("原因"), estr), "warning".into());
                         }
                     });
                 }
-
-                logic::ping::set_timestimp(Utc::now().timestamp());
             }
             event = swarm.select_next_some() => match event {
                 SwarmEvent::Behaviour(CBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
                     let mut pids = HashSet::new();
                     for (peer_id, _multiaddr) in list {
+                        debug!("mDNS discovered a new peer: {peer_id}");
+                        swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
+
                         if pids.contains(&peer_id.to_string()) {
                             continue;
                         }
                         pids.insert(peer_id.to_string());
 
-                        debug!("mDNS discovered a new peer: {peer_id}");
-                        swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
+                        debug!("start handshake with peer: {peer_id}");
 
                         let (ui, tx, peer_id) = (ui.clone(), tx.clone(), peer_id.to_string());
                         task::spawn(async move {
@@ -152,12 +149,13 @@ async fn start_gossipsub(
                            msg
                         );
 
-                    let (ui, tx) = (ui.clone(), tx.clone());
-                    let local_peer_id = lp_id.clone();
-                    let _ = slint::invoke_from_event_loop(move || {
-                        cb(ui,tx, msg, local_peer_id);
-                    });
-                    logic::ping::set_timestimp(Utc::now().timestamp());
+                    if !msg.starts_with("ping") {
+                        let (ui, tx) = (ui.clone(), tx.clone());
+                        let local_peer_id = lp_id.clone();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            cb(ui,tx, msg, local_peer_id);
+                        });
+                    }
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
                     debug!("Local node is listening on {address}");

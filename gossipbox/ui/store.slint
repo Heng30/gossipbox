@@ -5,7 +5,7 @@ export struct ChatItem {
     type: string,
     text: string,
     img: image,
-    img-name: string,
+    img-path: string,
 }
 
 export struct ChatSession {
@@ -63,6 +63,14 @@ export global Store  {
         // {
         //     type: "timestamp",
         //     text: "2023-12-03 12:03:45",
+        // },
+        // {
+        //     type: "uimage",
+        //     img: @image-url("/tmp/1.png"),
+        // },
+        // {
+        //     type: "bimage",
+        //     img: @image-url("/tmp/1.png"),
         // },
         // {
         //     type: "uimage",

@@ -58,7 +58,6 @@ impl Default for UI {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Swarm {
     pub enable_ping: bool,
-    pub connect_timeout: u64,
     pub ping_interval: u64,
     pub keepalive_interval: u64,
 }
@@ -66,8 +65,7 @@ pub struct Swarm {
 impl Default for Swarm {
     fn default() -> Self {
         Self {
-           enable_ping: true,
-            connect_timeout: 30,
+            enable_ping: true,
             ping_interval: 10,
             keepalive_interval: 10,
         }

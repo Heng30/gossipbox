@@ -16,8 +16,8 @@ export component UItem inherits VerticalLayout{
         spacing: Theme.spacing * 2;
 
         Rectangle {
-            width: Math.min(Theme.chat-width, txt.preferred-width + txt-box.padding * 3);
-            background: Theme.brand-color.brighter(15%);
+            width: Math.min(root.width * 0.8, txt.preferred-width + txt-box.padding * 3);
+            background: #B3D4FFFF;
             border-radius: Theme.border-radius;
 
             txt-box := VerticalLayout {

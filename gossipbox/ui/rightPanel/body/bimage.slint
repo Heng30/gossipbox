@@ -6,7 +6,7 @@ import { IconBtn } from "../../base/icon-btn.slint";
 
 export component BImage inherits HorizontalLayout {
     in-out property image <=>  img.source;
-    in-out property<string> image-name;
+    in-out property<string> image-path;
     property<float> image-rate: 0.5;
 
     alignment: start;
@@ -24,7 +24,7 @@ export component BImage inherits HorizontalLayout {
         border-radius: Theme.border-radius;
 
         img := Image {
-            height: Math.min(root.width * image-rate, root.width - root.spacing * 2 - av.width);
+            width: Math.min(root.width * image-rate, root.width - root.spacing * 2 - av.width);
         }
 
         Rectangle {
@@ -34,6 +34,7 @@ export component BImage inherits HorizontalLayout {
             height: hbox.preferred-height + Theme.padding * 2;
             background: Theme.base-fill-color;
             border-radius: Theme.border-radius;
+            opacity: 0.5;
 
             hbox := HorizontalLayout {
                 x: Theme.padding;
@@ -69,7 +70,7 @@ export component BImage inherits HorizontalLayout {
                     tip-text: Store.translator.tip-download;
 
                     clicked => {
-                        Logic.save-image(root.image-name);
+                        Logic.save-image(root.image-path);
                     }
                 }
             }

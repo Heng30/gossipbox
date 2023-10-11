@@ -1,5 +1,5 @@
 use super::{
-    data::{ChunkItem, MsgItem},
+    data::MsgItem,
     session,
 };
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
@@ -9,18 +9,10 @@ use base64;
 use chrono::Utc;
 use native_dialog::FileDialog;
 use slint::{ComponentHandle, Model, VecModel, Weak};
-use std::cell::RefCell;
-use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use std::sync::Mutex;
 use tokio::sync::mpsc;
 use uuid::Uuid;
-
-lazy_static! {
-    pub static ref CHUNK_ITEM_CAHCE: Mutex<RefCell<HashMap<String, Vec<ChunkItem>>>> =
-        Mutex::new(RefCell::new(HashMap::new()));
-}
 
 const TEXT_TIMEOUT: i64 = 300;
 

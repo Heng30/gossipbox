@@ -1,8 +1,6 @@
 use crate::config;
 use uuid::Uuid;
 
-pub const CHUNK_ITEM_SIZE: usize = 64 * 1024;
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MsgItem {
     pub r#type: String,
@@ -38,18 +36,16 @@ impl Default for MsgItem {
 }
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
-pub struct ChunkItem {
-    pub id: String,
-    pub total_chunk: u32,
-    pub current_chunk: u32,
-    pub data: String,
+pub struct DynFileSvrInfo {
+    pub ips: Vec<String>,
+    pub port: u16,
 }
 
-impl From<&str> for ChunkItem {
+impl From<&str> for DynFileSvrInfo {
     fn from(text: &str) -> Self {
-        match serde_json::from_str::<ChunkItem>(&text) {
+        match serde_json::from_str::<DynFileSvrInfo>(&text) {
             Ok(item) => item,
-            _ => ChunkItem::default(),
+            _ => DynFileSvrInfo::default(),
         }
     }
 }

@@ -6,7 +6,7 @@ import { IconBtn } from "../../base/icon-btn.slint";
 
 export component UImage inherits HorizontalLayout {
     in-out property image <=>  img.source;
-    property<float> image-rate: 0.5;
+    property<float> image-rate: 0.3;
 
     alignment: end;
     spacing: Theme.padding * 2;
@@ -54,7 +54,7 @@ export component UImage inherits HorizontalLayout {
                     tip-text: Store.translator.tip-zoom-out;
 
                     clicked => {
-                        image-rate = 0.5;
+                        image-rate = 0.3;
                     }
                 }
             }

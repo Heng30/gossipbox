@@ -36,6 +36,21 @@ impl Default for MsgItem {
 }
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
+pub struct FileInfo {
+    pub name: String,
+    pub total_size: u64,
+}
+
+impl From<&str> for FileInfo {
+    fn from(text: &str) -> Self {
+        match serde_json::from_str::<FileInfo>(&text) {
+            Ok(item) => item,
+            _ => FileInfo::default(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct DynFileSvrInfo {
     pub ips: Vec<String>,
     pub port: u16,

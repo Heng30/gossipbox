@@ -8,10 +8,10 @@ extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 
-use slint::Weak;
 use chrono::Local;
 use env_logger::fmt::Color as LColor;
 use log::debug;
+use slint::Weak;
 use std::env;
 use std::io::Write;
 use tokio::sync::mpsc;
@@ -21,10 +21,15 @@ mod logic;
 mod util;
 mod version;
 
-use logic::{about, chat, clipboard, message, ok_cancel_dialog, session, setting, window, svr, ping};
+use logic::{
+    about, chat, clipboard, message, ok_cancel_dialog, ping, session, setting, svr, window, MsgItem,
+};
 
 pub type CResult = Result<(), Box<dyn std::error::Error>>;
-pub type SendCB = fn (ui: Weak<AppWindow>, tx: mpsc::UnboundedSender<String>, msg: String, local_peer_id: String);
+pub type SendCB =
+    fn(ui: Weak<AppWindow>, tx: mpsc::UnboundedSender<String>, msg: String, local_peer_id: String);
+pub type SendFileCB =
+    fn(ui: Weak<AppWindow>, mi: MsgItem, listen_port: u16, tx: mpsc::UnboundedSender<String>);
 
 #[tokio::main]
 async fn main() -> CResult {
@@ -61,9 +66,9 @@ fn init_logger() {
             let ts = Local::now().format("%Y-%m-%d %H:%M:%S");
             let mut level_style = buf.style();
             match record.level() {
-                log::Level::Warn | log::Level::Error => {
-                    level_style.set_color(LColor::Red).set_bold(true)
-                }
+                log::Level::Warn => level_style.set_color(LColor::Red).set_bold(true),
+                log::Level::Error => level_style.set_color(LColor::Yellow).set_bold(true),
+                log::Level::Info => level_style.set_color(LColor::Green).set_bold(true),
                 _ => level_style.set_color(LColor::Blue).set_bold(true),
             };
 

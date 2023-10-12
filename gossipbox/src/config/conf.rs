@@ -3,8 +3,8 @@ use crate::CResult;
 use log::debug;
 use platform_dirs::AppDirs;
 use std::cell::RefCell;
-use std::sync::Mutex;
 use std::fs;
+use std::sync::Mutex;
 
 lazy_static! {
     pub static ref CONFIG: Mutex<RefCell<Config>> = Mutex::new(RefCell::new(Config::default()));

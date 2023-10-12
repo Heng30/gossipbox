@@ -1,7 +1,6 @@
 use std::fs;
 use std::io;
 
-#[allow(dead_code)]
 pub fn dir_size(path: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut total_size: u64 = 0;
     let metadata = fs::metadata(path)?;
@@ -18,7 +17,6 @@ pub fn dir_size(path: &str) -> Result<String, Box<dyn std::error::Error>> {
     Ok(format!("{:.2}M", total_size as f64 / 1024.0 / 1024.0))
 }
 
-#[allow(dead_code)]
 pub fn remove_dir_files(path: &str) -> io::Result<()> {
     for entry in fs::read_dir(path)? {
         let entry = entry?;

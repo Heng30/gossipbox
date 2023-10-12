@@ -1,7 +1,9 @@
 import { LineEdit, ComboBox } from "std-widgets.slint";
 import { Theme } from "../../theme.slint";
 import { Store } from "../../store.slint";
+import { Logic } from "../../logic.slint";
 import { Label } from "../../base/label.slint";
+import { Btn } from "../../base/btn.slint";
 
 export component Chat inherits VerticalLayout {
     in-out property user-name <=> username-le.text;
@@ -32,6 +34,19 @@ export component Chat inherits VerticalLayout {
                 model: [Store.translator.setting-dialog-chat-online, Store.translator.setting-dialog-chat-busy, Store.translator.setting-dialog-chat-idle];
                 current-value: self.model[0];
                 current-index: 0;
+            }
+        }
+
+        HorizontalLayout {
+            padding-top: Theme.padding * 4;
+            Btn {
+                bg-color: Theme.danger-color;
+                border-radius: Theme.border-radius;
+                text: Store.translator.setting-dialog-chat-cache-clean + "(" + Store.setting-dialog-config.chat.cache-size + ")";
+                icon: @image-url("../../images/warning.svg");
+                clicked => {
+                    Logic.clean-cache();
+                }
             }
         }
     }

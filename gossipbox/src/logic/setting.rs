@@ -1,20 +1,42 @@
-use crate::config;
 use crate::slint_generatedAppWindow::{AppWindow, Logic, Store};
 use crate::util::translator::tr;
+use crate::{config, util};
+use log::warn;
 use slint::{ComponentHandle, Weak};
 
 pub fn init(ui: &AppWindow) {
-    let ui_cancel = ui.as_weak();
-    let ui_ok = ui.as_weak();
-
     init_setting_dialog(ui.as_weak());
 
-    ui.global::<Logic>().on_setting_cancel(move || {
-        init_setting_dialog(ui_cancel.clone());
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_clean_cache(move || {
+        let ui = ui_handle.unwrap();
+        match util::fs::remove_dir_files(&config::cache_dir()) {
+            Err(e) => {
+                ui.global::<Logic>().invoke_show_message(
+                    slint::format!("{}. {}: {}", tr("清空失败"), tr("原因"), e),
+                    "warning".into(),
+                );
+            }
+            _ => {
+                let mut setting_dialog = ui.global::<Store>().get_setting_dialog_config();
+                setting_dialog.chat.cache_size = "0M".into();
+                ui.global::<Store>()
+                    .set_setting_dialog_config(setting_dialog);
+
+                ui.global::<Logic>()
+                    .invoke_show_message(tr("清空成功").into(), "success".into());
+            }
+        }
     });
 
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_setting_cancel(move || {
+        init_setting_dialog(ui_handle.clone());
+    });
+
+    let ui_handle = ui.as_weak();
     ui.global::<Logic>().on_setting_ok(move |setting_config| {
-        let ui = ui_ok.unwrap();
+        let ui = ui_handle.unwrap();
         let mut config = config::config();
 
         config.ui.font_size = setting_config
@@ -72,6 +94,13 @@ fn init_setting_dialog(ui: Weak<AppWindow>) {
 
     setting_dialog.chat.user_name = chat_config.user_name.into();
     setting_dialog.chat.user_status = chat_config.user_status.into();
+
+    match util::fs::dir_size(&config::cache_dir()) {
+        Ok(size) => {
+            setting_dialog.chat.cache_size = size.into();
+        }
+        Err(e) => warn!("get cache size failed. {e:?}"),
+    }
 
     ui.global::<Store>()
         .set_setting_dialog_config(setting_dialog);

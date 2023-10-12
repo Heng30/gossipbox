@@ -383,9 +383,7 @@ fn send_image_fileinfo(
     let fi = DynFileSvrInfo {
         ips: util::net::ipv4_interfaces(),
         port: listen_port,
-        ..Default::default()
     };
-    log::debug!("{:?}", fi);
 
     match serde_json::to_string(&fi) {
         Ok(text) => {

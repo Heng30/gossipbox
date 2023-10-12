@@ -1,5 +1,5 @@
 use super::{
-    data::{DynFileSvrInfo, FileInfo, MsgItem},
+    data::{DynFileSvrInfo, MsgItem},
     filesvr, session,
 };
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
@@ -121,15 +121,16 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
     let ui_handle = ui.as_weak();
     ui.global::<Logic>().on_save_image(move |image_path| {
         let ui = ui_handle.unwrap();
+
         let dst_file = match FileDialog::new()
             .set_location("~")
-            .add_filter("Image Files", &["png", "PNG"])
-            .show_open_single_file()
+            .set_filename("tmp.png")
+            .show_save_single_file()
         {
             Ok(Some(file)) => file,
             Err(e) => {
                 ui.global::<Logic>().invoke_show_message(
-                    slint::format!("{}. {}: {:?}", tr("保存失败"), tr("原因"), e),
+                    slint::format!("{}{:?}", tr("保存失败"), e),
                     "warning".into(),
                 );
                 return;
@@ -138,7 +139,6 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
         };
 
         let src_file = Path::new(image_path.as_str());
-
         match fs::copy(src_file, dst_file) {
             Err(e) => {
                 ui.global::<Logic>().invoke_show_message(
@@ -224,7 +224,7 @@ fn handle_msg(ui: &AppWindow, sitem: MsgItem) {
 
             match sitem.r#type.as_str() {
                 "plain" => add_chat_text(&session, &sitem),
-                "image" => add_chat_image(&ui, &session, &sitem),
+                "image" => add_chat_image(&ui, session.uuid.to_string(), &sitem),
                 _ => (),
             }
 
@@ -262,17 +262,6 @@ fn add_chat_timestamp(session: &mut ChatSession) {
     }
 
     session.timestamp = slint::format!("{ts}");
-}
-
-#[allow(dead_code)]
-fn get_session(ui: &AppWindow, suuid: &slint::SharedString) -> Option<ChatSession> {
-    for session in ui.global::<Store>().get_chat_sessions().iter() {
-        if session.uuid == suuid {
-            return Some(session);
-        }
-    }
-
-    None
 }
 
 pub fn send_handshake_request(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, peer_id: String) {
@@ -325,44 +314,16 @@ fn add_chat_text(session: &ChatSession, sitem: &MsgItem) {
         });
 }
 
-// TODO: split image to small chunk
-fn add_chat_image(ui: &AppWindow, session: &ChatSession, sitem: &MsgItem) {
-    // match base64::decode(&sitem.text) {
-    //     Ok(data) => {
-    //         let name = Uuid::new_v4().to_string();
-    //         let img_path = Path::new(&config::cache_dir()).join(name.as_str());
+fn add_chat_image(ui: &AppWindow, suuid: String, sitem: &MsgItem) {
+    let fi = DynFileSvrInfo::from(sitem.text.as_str());
+    let name = format!("{}.png", Uuid::new_v4().to_string());
+    let img_path = Path::new(&config::cache_dir())
+        .join(name.as_str())
+        .to_str()
+        .unwrap_or("")
+        .to_string();
 
-    //         match fs::write(&img_path, &data) {
-    //             Err(e) => {
-    //                 ui.global::<Logic>().invoke_show_message(
-    //                     slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
-    //                     "warning".into(),
-    //                 );
-    //             }
-    //             _ => {
-    //                 if let Ok(img) = slint::Image::load_from_path(&img_path) {
-    //                     session
-    //                         .chat_items
-    //                         .as_any()
-    //                         .downcast_ref::<VecModel<ChatItem>>()
-    //                         .expect("We know we set a VecModel earlier")
-    //                         .push(ChatItem {
-    //                             r#type: "bimage".into(),
-    //                             img,
-    //                             img_path: img_path.to_str().unwrap().into(),
-    //                             ..Default::default()
-    //                         });
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     Err(e) => {
-    //         ui.global::<Logic>().invoke_show_message(
-    //             slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
-    //             "warning".into(),
-    //         );
-    //     }
-    // }
+    filesvr::recv(ui, fi, recv_image_fileinfo, suuid, img_path);
 }
 
 fn send_image(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, image_path: &Path) {
@@ -422,6 +383,7 @@ fn send_image_fileinfo(
     let fi = DynFileSvrInfo {
         ips: util::net::ipv4_interfaces(),
         port: listen_port,
+        ..Default::default()
     };
     log::debug!("{:?}", fi);
 
@@ -437,4 +399,38 @@ fn send_image_fileinfo(
             );
         }
     };
+}
+
+fn recv_image_fileinfo(ui: Weak<AppWindow>, suuid: String, img_path: String) {
+    let ui = ui.unwrap();
+    for (index, session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
+        if session.uuid.as_str() == suuid.as_str() {
+            match slint::Image::load_from_path(Path::new(&img_path)) {
+                Ok(img) => {
+                    session
+                        .chat_items
+                        .as_any()
+                        .downcast_ref::<VecModel<ChatItem>>()
+                        .expect("We know we set a VecModel earlier")
+                        .push(ChatItem {
+                            r#type: "bimage".into(),
+                            img,
+                            img_path: img_path.into(),
+                            ..Default::default()
+                        });
+
+                    ui.global::<Store>()
+                        .get_chat_sessions()
+                        .set_row_data(index, session);
+                }
+                Err(e) => {
+                    ui.global::<Logic>().invoke_show_message(
+                        slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
+                        "warning".into(),
+                    );
+                }
+            }
+            return;
+        }
+    }
 }

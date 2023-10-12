@@ -11,6 +11,7 @@ export component BImage inherits HorizontalLayout {
 
     alignment: start;
     spacing: Theme.padding * 2;
+    padding-left: Theme.scroll-width;
     padding-bottom: Theme.padding;
 
     av := Avatar {
@@ -24,7 +25,7 @@ export component BImage inherits HorizontalLayout {
         border-radius: Theme.border-radius;
 
         img := Image {
-            width: Math.min(root.width * image-rate, root.width - root.spacing * 2 - av.width);
+            width: Math.min(root.width * image-rate, root.width - root.spacing * 2 - av.width - root.padding-left);
         }
 
         Rectangle {

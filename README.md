@@ -10,7 +10,7 @@ It's a chat software running in a `p2p` network. The program is written using `S
 - [x] Supports refreshing the list
 - [x] Supports English and Chinese interfaces
 - [x] Supports sending text
-- [ ] Supports sending images
+- [x] Supports sending images
 - [ ] Supports sending files
 
 #### How to build?

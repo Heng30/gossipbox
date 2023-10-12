@@ -31,6 +31,8 @@ pub type SendCB =
 pub type SendFileCB =
     fn(ui: Weak<AppWindow>, mi: MsgItem, listen_port: u16, tx: mpsc::UnboundedSender<String>);
 
+pub type RecvFileCB = fn(ui: Weak<AppWindow>, suuid: String, img_path: String);
+
 #[tokio::main]
 async fn main() -> CResult {
     init_logger();

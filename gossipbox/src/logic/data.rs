@@ -54,6 +54,7 @@ impl From<&str> for FileInfo {
 pub struct DynFileSvrInfo {
     pub ips: Vec<String>,
     pub port: u16,
+    pub file_info: FileInfo,
 }
 
 impl From<&str> for DynFileSvrInfo {

@@ -1,16 +1,15 @@
-use super::data::MsgItem;
+use super::data::{DynFileSvrInfo, MsgItem};
 use crate::slint_generatedAppWindow::{AppWindow, Logic};
 use crate::util::translator::tr;
-use crate::SendFileCB;
+use crate::{RecvFileCB, SendFileCB};
 use log::{debug, info};
 use slint::ComponentHandle;
-use slint::{Timer, TimerMode};
 use std::time::Duration;
 use tokio::fs::File;
-use tokio::io::{self, AsyncBufReadExt, AsyncWriteExt, BufReader, BufWriter};
+use tokio::io::{BufReader, BufWriter};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
-use tokio::time::{sleep, timeout};
+use tokio::time::timeout;
 
 fn show_error(ui: &AppWindow, estr: String) {
     let ui = ui.as_weak();
@@ -83,18 +82,38 @@ pub fn send(
     });
 }
 
-// async fn recv_file(ip: &Ipv4Addr, port: u16, path: &PathBuf, size: u64) -> AResult<()> {
-//     let addr = format!("{ip}:{port}");
-//     let mut stream = TcpStream::connect(addr).await?;
+pub fn recv(ui: &AppWindow, fi: DynFileSvrInfo, cb: RecvFileCB, suuid: String, save_path: String) {
+    let ui_handle = ui.as_weak();
+    tokio::spawn(async move {
+        for ip in fi.ips.into_iter() {
+            let addr = format!("{}:{}", ip, fi.port);
 
-//     debug!("Peer is connected. Receiving file: {path:?}");
+            match timeout(Duration::from_secs(3), TcpStream::connect(addr)).await {
+                Ok(Ok(mut stream)) => {
+                    info!("Peer is connected. Receiving file: {save_path:?}");
 
-//     let file = File::create(path).await?;
-//     let mut writer = BufWriter::new(file);
-
-//     tokio::io::copy(&mut stream, &mut writer).await?;
-
-//     debug!("Done");
-
-//     Ok(())
-// }
+                    match File::create(&save_path).await {
+                        Ok(file) => {
+                            match tokio::io::copy(&mut stream, &mut BufWriter::new(file)).await {
+                                Err(e) => {
+                                    show_error(&ui_handle.clone().unwrap(), e.to_string());
+                                }
+                                _ => {
+                                    let ui = ui_handle.clone();
+                                    let _ = slint::invoke_from_event_loop(move || {
+                                        cb(ui, suuid, save_path);
+                                    });
+                                }
+                            }
+                            return;
+                        }
+                        Err(e) => {
+                            show_error(&ui_handle.clone().unwrap(), e.to_string());
+                        }
+                    }
+                }
+                _ => (),
+            }
+        }
+    });
+}

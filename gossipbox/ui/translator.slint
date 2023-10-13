@@ -22,6 +22,16 @@ export struct Translation {
     busy: string,
     idle: string,
 
+    file-name: string,
+    file-size: string,
+    file-status: string,
+    file-download: string,
+
+    error: string,
+    undownload: string,
+    downloading: string,
+    downloaded: string,
+
     setting-dialog-ui: string,
     setting-dialog-ui-font-size: string,
     setting-dialog-ui-font-family: string,
@@ -98,6 +108,16 @@ export global Translator {
             offline: is-cn ? "离线" : "Offline",
             busy: is-cn ? "正忙" : "Busy",
             idle: is-cn ? "空闲" : "Idle",
+
+            file-name: is-cn ? "名称:" : "Name:",
+            file-size: is-cn ? "大小:" : "Size:",
+            file-status: is-cn ? "状态:" : "Status:",
+            file-download: is-cn ? "下载": "Download",
+
+            error: is-cn ? "出错" : "Error",
+            undownload: is-cn ? "未下载" : "Undownload",
+            downloading: is-cn ? "正在下载" : "Downloading",
+            downloaded: is-cn ? "已下载" : "Downloaded",
 
             setting-dialog-ui: is-cn ? "界面" : "UI",
             setting-dialog-ui-font-size: is-cn ? "字体大小:" : "Font Size:",

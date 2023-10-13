@@ -7,6 +7,8 @@ import { BItem } from "./bitem.slint";
 import { Timestamp } from "./timestamp.slint";
 import { UImage } from "./uimage.slint";
 import { BImage } from "./bimage.slint";
+import { UFile } from "./ufile.slint";
+import { BFile } from "./bfile.slint";
 import { NoMessageImg } from "../../base/no-message.slint";
 import { CenterLayout } from "../../base/center-layout.slint";
 
@@ -90,6 +92,18 @@ export component Body inherits Rectangle {
             if data.type == "bimage": BImage {
                 image: data.img;
                 image-path: data.img-path;
+            }
+
+            if data.type == "ufile": UFile {
+                name: data.file-name;
+                size: data.file-size;
+            }
+
+            if data.type == "bfile": BFile {
+                file-id: data.file-id;
+                name: data.file-name;
+                status: data.file-status;
+                size: data.file-size;
             }
         }
     }

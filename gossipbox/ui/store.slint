@@ -9,6 +9,11 @@ export struct ChatItem {
 
     img: image,
     img-path: string,
+
+    file-id: string,
+    file-name: string,
+    file-size: string,
+    file-status: string,
 }
 
 export struct ChatSession {
@@ -80,6 +85,17 @@ export global Store  {
         // {
         //     type: "uimage",
         //     img: @image-url("./images/icon.png"),
+        // },
+        // {
+        //     type: "ufile",
+        //     file-name: "fwjif jw wjfiw wjif jwif jwifj wijj wif",
+        //     file-size: "1G",
+        // },
+        // {
+        //     type: "bfile",
+        //     file-name: "fwjif jw wjfiw wjif jwif jwifj wijj wif",
+        //     file-size: "1G",
+        //     file-status: "undownload",
         // },
         // {
         //     type: "bimage",

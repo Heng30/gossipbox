@@ -1,4 +1,4 @@
-use super::data::{DynFileSvrInfo, MsgItem};
+use super::data::{MsgItem, RecvFileCBArgs};
 use crate::slint_generatedAppWindow::{AppWindow, Logic};
 use crate::util::translator::tr;
 use crate::{RecvFileCB, SendFileCB};
@@ -82,11 +82,22 @@ pub fn send(
     });
 }
 
-pub fn recv(ui: &AppWindow, fi: DynFileSvrInfo, cb: RecvFileCB, suuid: String, save_path: String) {
+pub fn recv(
+    ui: &AppWindow,
+    args: RecvFileCBArgs,
+    cb: RecvFileCB,
+    suuid: String,
+    save_path: String,
+) {
     let ui_handle = ui.as_weak();
     tokio::spawn(async move {
-        for ip in fi.ips.into_iter() {
-            let addr = format!("{}:{}", ip, fi.port);
+        let dfi = match args {
+            RecvFileCBArgs::Image(ref item) => item.dfi.clone(),
+            RecvFileCBArgs::File(ref item) => item.dfi.clone(),
+        };
+
+        for ip in dfi.ips.into_iter() {
+            let addr = format!("{}:{}", ip, dfi.port);
 
             match timeout(Duration::from_secs(3), TcpStream::connect(addr)).await {
                 Ok(Ok(mut stream)) => {
@@ -100,9 +111,14 @@ pub fn recv(ui: &AppWindow, fi: DynFileSvrInfo, cb: RecvFileCB, suuid: String, s
                                 }
                                 _ => {
                                     let ui = ui_handle.clone();
-                                    let _ = slint::invoke_from_event_loop(move || {
-                                        cb(ui, suuid, save_path);
-                                    });
+                                    match args {
+                                        RecvFileCBArgs::Image(_) => {
+                                            let _ = slint::invoke_from_event_loop(move || {
+                                                cb(ui, suuid, save_path);
+                                            });
+                                        }
+                                        RecvFileCBArgs::File(ref _item) => {}
+                                    }
                                 }
                             }
                             return;

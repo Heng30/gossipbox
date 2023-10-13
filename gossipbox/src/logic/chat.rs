@@ -1,5 +1,5 @@
 use super::{
-    data::{DynFileSvrInfo, MsgItem},
+    data::{ChatImgArgs, DynFileSvrInfo, MsgItem, RecvFileCBArgs},
     filesvr, session,
 };
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
@@ -42,6 +42,7 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             .expect("We know we set a VecModel earlier")
             .push(ChatItem {
                 r#type: "uitem".into(),
+                uuid: Uuid::new_v4().to_string().into(),
                 text: text.clone(),
                 ..Default::default()
             });
@@ -256,6 +257,7 @@ fn add_chat_timestamp(session: &mut ChatSession) {
             .expect("We know we set a VecModel earlier")
             .push(ChatItem {
                 r#type: "timestamp".into(),
+                uuid: Uuid::new_v4().to_string().into(),
                 text: util::time::local_now("%m-%d %H:%M:%S").into(),
                 ..Default::default()
             });
@@ -309,13 +311,13 @@ fn add_chat_text(session: &ChatSession, sitem: &MsgItem) {
         .expect("We know we set a VecModel earlier")
         .push(ChatItem {
             r#type: "bitem".into(),
+            uuid: Uuid::new_v4().to_string().into(),
             text: sitem.text.as_str().into(),
             ..Default::default()
         });
 }
 
 fn add_chat_image(ui: &AppWindow, suuid: String, sitem: &MsgItem) {
-    let fi = DynFileSvrInfo::from(sitem.text.as_str());
     let name = format!("{}.png", Uuid::new_v4().to_string());
     let img_path = Path::new(&config::cache_dir())
         .join(name.as_str())
@@ -323,7 +325,11 @@ fn add_chat_image(ui: &AppWindow, suuid: String, sitem: &MsgItem) {
         .unwrap_or("")
         .to_string();
 
-    filesvr::recv(ui, fi, recv_image_fileinfo, suuid, img_path);
+    let args = RecvFileCBArgs::Image(ChatImgArgs {
+        dfi: DynFileSvrInfo::from(sitem.text.as_str()),
+    });
+
+    filesvr::recv(ui, args, recv_image_fileinfo, suuid, img_path);
 }
 
 fn send_image(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, image_path: &Path) {
@@ -348,6 +354,7 @@ fn send_image(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, image_path: &Pa
                 .expect("We know we set a VecModel earlier")
                 .push(ChatItem {
                     r#type: "uimage".into(),
+                    uuid: Uuid::new_v4().to_string().into(),
                     img,
                     img_path: image_path.to_str().unwrap().into(),
                     ..Default::default()
@@ -412,6 +419,7 @@ fn recv_image_fileinfo(ui: Weak<AppWindow>, suuid: String, img_path: String) {
                         .expect("We know we set a VecModel earlier")
                         .push(ChatItem {
                             r#type: "bimage".into(),
+                            uuid: Uuid::new_v4().to_string().into(),
                             img,
                             img_path: img_path.into(),
                             ..Default::default()

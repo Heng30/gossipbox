@@ -37,6 +37,7 @@ impl Default for MsgItem {
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct FileInfo {
+    pub id: String,
     pub name: String,
     pub total_size: u64,
 }
@@ -63,4 +64,21 @@ impl From<&str> for DynFileSvrInfo {
             _ => DynFileSvrInfo::default(),
         }
     }
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct ChatImgArgs {
+    pub dfi: DynFileSvrInfo,
+}
+
+#[derive(Default, Debug, Clone)]
+pub struct ChatFileArgs {
+    pub uuid: String,
+    pub dfi: DynFileSvrInfo,
+}
+
+#[derive(Debug, Clone)]
+pub enum RecvFileCBArgs {
+    Image(ChatImgArgs),
+    File(ChatFileArgs),
 }

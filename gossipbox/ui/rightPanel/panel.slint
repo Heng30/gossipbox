@@ -11,6 +11,22 @@ export component RPanel inherits VerticalLayout {
     forward-focus: footer;
 
     body := Body { }
-    footer := Footer { }
+    footer := Footer {
+        scroll-to-top => {
+            body.scroll-to-top()
+        }
+
+        scroll-to-bottom => {
+            body.scroll-to-bottom()
+        }
+
+        scroll-up => {
+            body.scroll-up();
+        }
+
+        scroll-down => {
+            body.scroll-down();
+        }
+    }
 }
 

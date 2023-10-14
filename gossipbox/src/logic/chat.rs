@@ -1,5 +1,5 @@
 use super::{
-    data::{ChatImgArgs, DynFileSvrInfo, MsgItem, RecvFileCBArgs},
+    data::{ChatImgArgs, DynFileSvrInfo, FileInfo, MsgItem, RecvFileCBArgs},
     filesvr, session,
 };
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
@@ -8,6 +8,7 @@ use crate::{config, util};
 use chrono::Utc;
 use native_dialog::FileDialog;
 use slint::{ComponentHandle, Model, VecModel, Weak};
+use std::ffi::OsStr;
 use std::fs;
 use std::path::Path;
 use tokio::sync::mpsc;
@@ -76,6 +77,26 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
         };
 
         send_image(&ui, tx_handle.clone(), &image_path);
+    });
+
+    let (ui_handle, tx_handle) = (ui.as_weak(), tx.clone());
+    ui.global::<Logic>().on_send_file(move || {
+        let ui = ui_handle.unwrap();
+
+        let file_path = match FileDialog::new().set_location("~").show_open_single_file() {
+            Ok(Some(file)) => file,
+            Err(e) => {
+                ui.global::<Logic>().invoke_show_message(
+                    slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
+                    "warning".into(),
+                );
+
+                return;
+            }
+            _ => return,
+        };
+
+        send_fileinfo(&ui, tx_handle.clone(), file_path.as_path());
     });
 
     let (ui_handle, tx_handle) = (ui.as_weak(), tx.clone());
@@ -366,7 +387,7 @@ fn send_image(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, image_path: &Pa
             filesvr::send(
                 image_path.to_str().unwrap_or("").to_string(),
                 ui,
-                send_image_fileinfo,
+                send_dynsvrinfo,
                 mi,
                 tx,
             );
@@ -380,19 +401,19 @@ fn send_image(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, image_path: &Pa
     }
 }
 
-fn send_image_fileinfo(
+fn send_dynsvrinfo(
     ui: Weak<AppWindow>,
     mut mi: MsgItem,
     listen_port: u16,
     tx: mpsc::UnboundedSender<String>,
 ) {
     let ui = ui.unwrap();
-    let fi = DynFileSvrInfo {
+    let dfi = DynFileSvrInfo {
         ips: util::net::ipv4_interfaces(),
         port: listen_port,
     };
 
-    match serde_json::to_string(&fi) {
+    match serde_json::to_string(&dfi) {
         Ok(text) => {
             mi.text = text;
             send_msg(&ui, tx, mi);
@@ -439,4 +460,67 @@ fn recv_image_fileinfo(ui: Weak<AppWindow>, suuid: String, img_path: String) {
             return;
         }
     }
+}
+
+fn get_fileinfo(file_path: &Path) -> FileInfo {
+    let total_size = util::fs::file_size(file_path);
+    let name = file_path
+        .file_name()
+        .unwrap_or(OsStr::new(""))
+        .to_str()
+        .unwrap_or("")
+        .to_string();
+
+    FileInfo {
+        id: Uuid::new_v4().to_string(),
+        name,
+        total_size,
+    }
+}
+
+fn send_fileinfo(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, file_path: &Path) {
+    let suuid = ui.global::<Store>().get_current_session_uuid();
+    let fi = get_fileinfo(file_path);
+
+    for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
+        if session.uuid == suuid {
+            add_chat_timestamp(&mut session);
+            ui.global::<Store>()
+                .get_chat_sessions()
+                .set_row_data(index, session);
+            break;
+        }
+    }
+
+    ui.global::<Store>()
+        .get_session_datas()
+        .as_any()
+        .downcast_ref::<VecModel<ChatItem>>()
+        .expect("We know we set a VecModel earlier")
+        .push(ChatItem {
+            r#type: "ufile".into(),
+            uuid: fi.id.as_str().into(),
+            file_id: fi.id.as_str().into(),
+            file_name: fi.name.as_str().into(),
+            file_size: util::fs::file_size_string(fi.total_size).into(),
+            file_status: "undownload".into(),
+            ..Default::default()
+        });
+
+    let mut mi = MsgItem::default();
+    mi.r#type = "fileinfo".to_string();
+    mi.to_uuid = suuid.to_string();
+
+    match serde_json::to_string(&fi) {
+        Ok(text) => {
+            mi.text = text.to_string();
+            send_msg(&ui, tx, mi);
+        }
+        Err(e) => {
+            ui.global::<Logic>().invoke_show_message(
+                slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
+                "warning".into(),
+            );
+        }
+    };
 }

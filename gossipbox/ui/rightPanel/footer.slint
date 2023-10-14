@@ -132,6 +132,16 @@ export component Footer inherits Rectangle {
 
             IconBtn {
                 x: parent.width - (self.width + Theme.padding * 2) * 2;
+                icon: @image-url("../images/file-open-fill.svg");
+                hover-color: Theme.hover-color-dark;
+                tip-text: Store.translator.tip-send-file;
+                clicked => {
+                    Logic.send-file();
+                }
+            }
+
+            IconBtn {
+                x: parent.width - (self.width + Theme.padding * 2) * 3;
                 icon: @image-url("../images/image.svg");
                 hover-color: Theme.hover-color-dark;
                 tip-text: Store.translator.tip-send-image;
@@ -141,7 +151,7 @@ export component Footer inherits Rectangle {
             }
 
             IconBtn {
-                x: parent.width - (self.width + Theme.padding * 2) * 3;
+                x: parent.width - (self.width + Theme.padding * 2) * 4;
                 icon: @image-url("../images/format-clear.svg");
                 hover-color: Theme.hover-color-dark;
                 tip-text: Store.translator.tip-clear;
@@ -151,7 +161,7 @@ export component Footer inherits Rectangle {
             }
 
             IconBtn {
-                x: parent.width - (self.width + Theme.padding * 2) * 4;
+                x: parent.width - (self.width + Theme.padding * 2) * 5;
                 icon: @image-url("../images/reset.svg");
                 hover-color: Theme.hover-color-dark;
                 icon-width: Theme.icon-size * 0.7;

@@ -8,11 +8,17 @@ use crate::{config, util};
 use chrono::Utc;
 use native_dialog::FileDialog;
 use slint::{ComponentHandle, Model, VecModel, Weak};
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::fs;
 use std::path::Path;
+use std::sync::Mutex;
 use tokio::sync::mpsc;
 use uuid::Uuid;
+
+lazy_static! {
+    pub static ref FILEINFO_CACHE: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+}
 
 const TEXT_TIMEOUT: i64 = 300;
 
@@ -117,7 +123,7 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             .unwrap();
 
         match item.r#type.as_str() {
-            "uitem" | "uimage" => {
+            "uitem" | "uimage" | "ufile" => {
                 let item = ui
                     .global::<Store>()
                     .get_session_datas()
@@ -126,17 +132,72 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
                     .expect("We know we set a VecModel earlier")
                     .remove(rows - 1);
 
-                if item.r#type.as_str() == "uitem" {
-                    ui.global::<Logic>().invoke_send_text(item.text);
-                } else if item.r#type.as_str() == "uimage" {
-                    let image_path = Path::new(item.img_path.as_str());
-                    send_image(&ui, tx_handle.clone(), &image_path);
+                match item.r#type.as_str() {
+                    "uitem" => {
+                        ui.global::<Logic>().invoke_send_text(item.text);
+                    }
+                    "uimage" => {
+                        let image_path = Path::new(item.img_path.as_str());
+                        send_image(&ui, tx_handle.clone(), &image_path);
+                    }
+                    "ufile" => {
+                        let fi = {
+                            FILEINFO_CACHE
+                                .lock()
+                                .unwrap()
+                                .get(item.file_id.as_str())
+                                .and_then(|item| Some(item.clone()))
+                        };
+                        match fi {
+                            Some(file_path) => {
+                                send_fileinfo(
+                                    &ui,
+                                    tx_handle.clone(),
+                                    &Path::new(file_path.as_str()),
+                                );
+                            }
+                            _ => {
+                                ui.global::<Logic>().invoke_show_message(
+                                    slint::format!(
+                                        "{}. {}: {:?}",
+                                        tr("出错"),
+                                        tr("原因"),
+                                        "file path not in cache"
+                                    ),
+                                    "warning".into(),
+                                );
+                            }
+                        }
+                    }
+                    _ => (),
                 }
 
                 ui.global::<Logic>()
                     .invoke_show_message(tr("正在重试...").into(), "success".into());
             }
             _ => return,
+        }
+    });
+
+    let ui_handle = ui.as_weak();
+    ui.global::<Logic>().on_remove_chat_file_item(move |uuid| {
+        let ui = ui_handle.unwrap();
+
+        for (index, item) in ui.global::<Store>().get_session_datas().iter().enumerate() {
+            if item.uuid == uuid {
+                ui.global::<Store>()
+                    .get_session_datas()
+                    .as_any()
+                    .downcast_ref::<VecModel<ChatItem>>()
+                    .expect("We know we set a VecModel earlier")
+                    .remove(index);
+
+                ui.global::<Logic>()
+                    .invoke_show_message(tr("删除成功").into(), "success".into());
+
+                FILEINFO_CACHE.lock().unwrap().remove(item.file_id.as_str());
+                return;
+            }
         }
     });
 
@@ -219,7 +280,7 @@ pub fn recv_cb(
             match sitem.r#type.as_str() {
                 "handshake-res" => handle_handshake_respond(&ui, sitem),
                 "flush-res" => handle_flush_respond(&ui, sitem),
-                "plain" | "image" => handle_msg(&ui, sitem),
+                "plain" | "image" | "fileinfo" => handle_msg(&ui, sitem),
                 _ => (),
             }
         }
@@ -247,6 +308,7 @@ fn handle_msg(ui: &AppWindow, sitem: MsgItem) {
             match sitem.r#type.as_str() {
                 "plain" => add_chat_text(&session, &sitem),
                 "image" => add_chat_image(&ui, session.uuid.to_string(), &sitem),
+                "fileinfo" => add_chat_file(&mut session, &sitem),
                 _ => (),
             }
 
@@ -351,6 +413,25 @@ fn add_chat_image(ui: &AppWindow, suuid: String, sitem: &MsgItem) {
     });
 
     filesvr::recv(ui, args, recv_image_fileinfo, suuid, img_path);
+}
+
+fn add_chat_file(session: &mut ChatSession, sitem: &MsgItem) {
+    let fi = FileInfo::from(sitem.text.as_str());
+
+    session
+        .chat_items
+        .as_any()
+        .downcast_ref::<VecModel<ChatItem>>()
+        .expect("We know we set a VecModel earlier")
+        .push(ChatItem {
+            r#type: "bfile".into(),
+            uuid: Uuid::new_v4().to_string().into(),
+            file_id: fi.id.into(),
+            file_name: fi.name.into(),
+            file_size: util::fs::file_size_string(fi.total_size).into(),
+            file_status: "undownload".into(),
+            ..Default::default()
+        });
 }
 
 fn send_image(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, image_path: &Path) {
@@ -482,6 +563,13 @@ fn send_fileinfo(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, file_path: &
     let suuid = ui.global::<Store>().get_current_session_uuid();
     let fi = get_fileinfo(file_path);
 
+    {
+        FILEINFO_CACHE
+            .lock()
+            .unwrap()
+            .insert(fi.id.clone(), file_path.to_str().unwrap_or("").to_string());
+    }
+
     for (index, mut session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
         if session.uuid == suuid {
             add_chat_timestamp(&mut session);
@@ -503,7 +591,6 @@ fn send_fileinfo(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, file_path: &
             file_id: fi.id.as_str().into(),
             file_name: fi.name.as_str().into(),
             file_size: util::fs::file_size_string(fi.total_size).into(),
-            file_status: "undownload".into(),
             ..Default::default()
         });
 

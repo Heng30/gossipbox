@@ -49,6 +49,14 @@ export component UFile inherits HorizontalLayout {
                         border-radius: Theme.border-radius;
                         text: Store.translator.cancel;
                         icon: @image-url("../../images/cancel.svg");
+
+                        clicked => {
+                            Store.ok-cancel-dialog-setting.title-type = "warning";
+                            Store.ok-cancel-dialog-setting.title-text = Store.translator.warning;
+                            Store.ok-cancel-dialog-setting.body-text = Store.translator.reset-or-not;
+                            Store.ok-cancel-dialog-setting.handle-type = "chat-file-remove";
+                            Store.ok-cancel-dialog-setting.handle-uuid = root.uuid;
+                        }
                     }
 
                 }

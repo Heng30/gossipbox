@@ -84,3 +84,19 @@ pub enum RecvFileCBArgs {
     Image(ChatImgArgs),
     File(ChatFileArgs),
 }
+
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
+pub struct ErrorItem {
+    pub r#type: String,
+    pub msg: String,
+    pub pri_data: String,
+}
+
+impl From<&str> for ErrorItem {
+    fn from(text: &str) -> Self {
+        match serde_json::from_str::<ErrorItem>(&text) {
+            Ok(item) => item,
+            _ => ErrorItem::default(),
+        }
+    }
+}

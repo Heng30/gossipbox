@@ -22,9 +22,23 @@ export component BFile inherits HorizontalLayout {
             return Store.translator.downloading;
         } else if (status == "downloaded") {
             return Store.translator.downloaded;
+        } else if (status == "download-failed") {
+            return Store.translator.download-failed;
         }
 
         return Store.translator.error;
+    }
+
+    pure function status-color(status: string) -> color {
+        if (status == "downloading") {
+            return Theme.brand-color.darker(50%);
+        } else if (status == "downloaded") {
+            return Theme.success-color.darker(50%);
+        } else if (status == "download-failed") {
+            return Theme.warning-color.darker(50%);
+        }
+
+        return Theme.basic-black-color;
     }
 
     av := Avatar {
@@ -59,6 +73,7 @@ export component BFile inherits HorizontalLayout {
                 }
 
                 status-txt := Text {
+                    color: root.status-color(root.status);
                     text: Store.translator.file-status + "  " + root.get-status(root.status);
                 }
 

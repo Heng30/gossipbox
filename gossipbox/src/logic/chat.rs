@@ -1,12 +1,14 @@
 use super::{
-    data::{ChatFileArgs, ChatImgArgs, DynFileSvrInfo, FileInfo, MsgItem, RecvFileCBArgs},
+    data::{
+        ChatFileArgs, ChatImgArgs, DynFileSvrInfo, ErrorItem, FileInfo, MsgItem, RecvFileCBArgs,
+    },
     filesvr, session,
 };
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
 use crate::util::translator::tr;
 use crate::{config, util};
 use chrono::Utc;
-use log::info;
+use log::{info, warn};
 use native_dialog::FileDialog;
 use slint::{ComponentHandle, Model, VecModel, Weak};
 use std::collections::HashMap;
@@ -353,7 +355,7 @@ pub fn recv_cb(
             match sitem.r#type.as_str() {
                 "handshake-res" => handle_handshake_respond(&ui, sitem),
                 "flush-res" => handle_flush_respond(&ui, sitem),
-                "plain" | "image" | "fileinfo" | "download-req" | "download-res" => {
+                "plain" | "image" | "fileinfo" | "download-req" | "download-res" | "error" => {
                     handle_msg(&ui, tx.clone(), sitem)
                 }
                 _ => (),
@@ -386,6 +388,7 @@ fn handle_msg(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, sitem: MsgItem)
                 "fileinfo" => add_chat_file(&mut session, &sitem),
                 "download-req" => send_download_res(&ui, &sitem, tx.clone()),
                 "download-res" => start_download_file(&ui, &session, &sitem),
+                "error" => handle_error(&ui, &session, &sitem),
                 _ => (),
             }
 
@@ -522,7 +525,24 @@ fn send_download_res(ui: &AppWindow, sitem: &MsgItem, tx: mpsc::UnboundedSender<
     };
 
     if fpath.is_empty() {
-        info!("can not download file, because it has been cancel.");
+        let mut mi = MsgItem::default();
+        mi.r#type = "error".to_string();
+        mi.to_uuid = sitem.from_uuid.clone();
+
+        let err = ErrorItem {
+            r#type: "download-res".to_string(),
+            msg: "can not download file, because it has been cancel".to_string(),
+            pri_data: sitem.text.clone(),
+        };
+
+        match serde_json::to_string(&err) {
+            Ok(text) => {
+                mi.text = text;
+                send_msg(ui, tx.clone(), mi);
+            }
+            _ => (),
+        };
+
         return;
     }
 
@@ -619,6 +639,37 @@ fn start_download_file(ui: &AppWindow, session: &ChatSession, sitem: &MsgItem) {
         session.uuid.to_string(),
         file_path,
     );
+}
+
+fn handle_error(ui: &AppWindow, _session: &ChatSession, sitem: &MsgItem) {
+    let err = ErrorItem::from(sitem.text.as_str());
+
+    match err.r#type.as_str() {
+        "download-res" => {
+            let uuid = {
+                match RECV_FILEINFO_CACHE
+                    .lock()
+                    .unwrap()
+                    .get(err.pri_data.as_str())
+                {
+                    Some((u, _)) => u.clone(),
+                    _ => {
+                        warn!("no file id in the cache");
+                        return;
+                    }
+                }
+            };
+            update_file_status(ui, sitem.to_uuid.as_str(), uuid.as_str(), "download-failed");
+
+            ui.global::<Logic>().invoke_show_message(
+                slint::format!("{}. {}: {}", tr("下载失败"), tr("原因"), err.msg),
+                "warning".into(),
+            );
+        }
+        _ => {
+            warn!("unknown type: {}", err.r#type);
+        }
+    }
 }
 
 fn send_dynsvrinfo(

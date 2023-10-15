@@ -31,6 +31,7 @@ export struct Translation {
     undownload: string,
     downloading: string,
     downloaded: string,
+    download-failed: string,
 
     setting-dialog-ui: string,
     setting-dialog-ui-font-size: string,
@@ -119,6 +120,7 @@ export global Translator {
             undownload: is-cn ? "未下载" : "Undownload",
             downloading: is-cn ? "正在下载" : "Downloading",
             downloaded: is-cn ? "已下载" : "Downloaded",
+            download-failed: is-cn ? "下载失败" : "Download Failed",
 
             setting-dialog-ui: is-cn ? "界面" : "UI",
             setting-dialog-ui-font-size: is-cn ? "字体大小:" : "Font Size:",

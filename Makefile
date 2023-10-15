@@ -20,7 +20,7 @@ run-local:
 	RUST_LOG=error,warn,info,debug,reqwest=on ./target/debug/gossipbox
 
 run-local-release:
-	RUST_LOG=error,warn,info,debug,libp2p=off,multistream-select=off ./target/release/gossipbox
+	RUST_LOG=error,warn,info,libp2p=off,multistream-select=off ./target/release/gossipbox
 
 clippy:
 	cargo clippy

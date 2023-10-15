@@ -11,7 +11,11 @@ It's a chat software running in a `p2p` network. The program is written using `S
 - [x] Supports English and Chinese interfaces
 - [x] Supports sending text
 - [x] Supports sending images
-- [ ] Supports sending files
+- [x] Supports sending files
+
+#### Note
+- **Not supported** saving session history
+- Images and files are not transferred using a P2P network, but using `tcp socket`
 
 #### How to build?
 - Install `Rust` and `Cargo`

@@ -10,7 +10,7 @@ use libp2p::{
     swarm::{SwarmBuilder, SwarmEvent},
     PeerId, Transport,
 };
-use log::{debug, warn};
+use log::{info, warn};
 use slint::{ComponentHandle, Weak};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
@@ -94,7 +94,7 @@ async fn start_gossipsub(
     loop {
         select! {
             Some(msg) = rx.recv() => {
-                debug!("Send message: {}", msg);
+                info!("Send message: {}", msg);
 
                 if let Err(e) = swarm
                     .behaviour_mut().gossipsub
@@ -112,7 +112,7 @@ async fn start_gossipsub(
                 SwarmEvent::Behaviour(CBehaviourEvent::Mdns(mdns::Event::Discovered(list))) => {
                     let mut pids = HashSet::new();
                     for (peer_id, _multiaddr) in list {
-                        debug!("mDNS discovered a new peer: {peer_id}");
+                        info!("mDNS discovered a new peer: {peer_id}");
                         swarm.behaviour_mut().gossipsub.add_explicit_peer(&peer_id);
 
                         if pids.contains(&peer_id.to_string()) {
@@ -120,7 +120,7 @@ async fn start_gossipsub(
                         }
                         pids.insert(peer_id.to_string());
 
-                        debug!("start handshake with peer: {peer_id}");
+                        info!("start handshake with peer: {peer_id}");
 
                         let (ui, tx, peer_id) = (ui.clone(), tx.clone(), peer_id.to_string());
                         task::spawn(async move {
@@ -134,7 +134,7 @@ async fn start_gossipsub(
                 },
                 SwarmEvent::Behaviour(CBehaviourEvent::Mdns(mdns::Event::Expired(list))) => {
                     for (peer_id, _multiaddr) in list {
-                        debug!("mDNS discover peer has expired: {peer_id}");
+                        info!("mDNS discover peer has expired: {peer_id}");
                         swarm.behaviour_mut().gossipsub.remove_explicit_peer(&peer_id);
                     }
                 },
@@ -144,7 +144,7 @@ async fn start_gossipsub(
                     message,
                 })) =>  {
                     let msg = String::from_utf8_lossy(&message.data).to_string();
-                    debug!(
+                    info!(
                             "Got message: '{}' with id: {id} from peer: {peer_id}",
                            msg
                         );
@@ -158,7 +158,7 @@ async fn start_gossipsub(
                     }
                 },
                 SwarmEvent::NewListenAddr { address, .. } => {
-                    debug!("Local node is listening on {address}");
+                    info!("Local node is listening on {address}");
                 }
                 _ => {}
             }

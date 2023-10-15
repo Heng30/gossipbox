@@ -1,11 +1,12 @@
 use super::{
-    data::{ChatImgArgs, DynFileSvrInfo, FileInfo, MsgItem, RecvFileCBArgs},
+    data::{ChatFileArgs, ChatImgArgs, DynFileSvrInfo, FileInfo, MsgItem, RecvFileCBArgs},
     filesvr, session,
 };
 use crate::slint_generatedAppWindow::{AppWindow, ChatItem, ChatSession, Logic, Store};
 use crate::util::translator::tr;
 use crate::{config, util};
 use chrono::Utc;
+use log::info;
 use native_dialog::FileDialog;
 use slint::{ComponentHandle, Model, VecModel, Weak};
 use std::collections::HashMap;
@@ -17,7 +18,12 @@ use tokio::sync::mpsc;
 use uuid::Uuid;
 
 lazy_static! {
-    pub static ref FILEINFO_CACHE: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+    pub static ref SEND_FILEINFO_CACHE: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
+}
+
+lazy_static! {
+    pub static ref RECV_FILEINFO_CACHE: Mutex<HashMap<String, (String, String)>> =
+        Mutex::new(HashMap::new());
 }
 
 const TEXT_TIMEOUT: i64 = 300;
@@ -142,7 +148,7 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
                     }
                     "ufile" => {
                         let fi = {
-                            FILEINFO_CACHE
+                            SEND_FILEINFO_CACHE
                                 .lock()
                                 .unwrap()
                                 .get(item.file_id.as_str())
@@ -195,7 +201,10 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
                 ui.global::<Logic>()
                     .invoke_show_message(tr("删除成功").into(), "success".into());
 
-                FILEINFO_CACHE.lock().unwrap().remove(item.file_id.as_str());
+                SEND_FILEINFO_CACHE
+                    .lock()
+                    .unwrap()
+                    .remove(item.file_id.as_str());
                 return;
             }
         }
@@ -235,6 +244,70 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             }
         }
     });
+
+    let (ui_handle, tx_handle) = (ui.as_weak(), tx.clone());
+    ui.global::<Logic>()
+        .on_download_file(move |uuid, file_id, filename| {
+            let ui = ui_handle.unwrap();
+            let suuid = ui.global::<Store>().get_current_session_uuid();
+
+            let dst_file = match FileDialog::new()
+                .set_location("~")
+                .set_filename(filename.as_str())
+                .show_save_single_file()
+            {
+                Ok(Some(file)) => file,
+                Err(e) => {
+                    ui.global::<Logic>().invoke_show_message(
+                        slint::format!("{}. {}: {:?}", tr("出错"), tr("原因"), e),
+                        "warning".into(),
+                    );
+
+                    return;
+                }
+                _ => return,
+            };
+
+            {
+                RECV_FILEINFO_CACHE.lock().unwrap().insert(
+                    file_id.to_string().clone(),
+                    (
+                        uuid.to_string(),
+                        dst_file.to_str().unwrap_or("").to_string(),
+                    ),
+                );
+            }
+
+            let mut mi = MsgItem::default();
+            mi.r#type = "download-req".to_string();
+            mi.to_uuid = suuid.to_string();
+            mi.text = file_id.to_string();
+            send_msg(&ui, tx_handle.clone(), mi);
+            update_file_status(&ui, suuid.as_str(), uuid.as_str(), "downloading");
+
+            ui.global::<Logic>()
+                .invoke_show_message(tr("正在下载...").into(), "success".into());
+        });
+}
+
+fn update_file_status(ui: &AppWindow, suuid: &str, uuid: &str, status: &str) {
+    for session in ui.global::<Store>().get_chat_sessions().iter() {
+        if session.uuid.as_str() == suuid {
+            for (index, mut item) in session.chat_items.iter().enumerate() {
+                if item.uuid.as_str() == uuid {
+                    item.file_status = status.into();
+                    ui.global::<Store>()
+                        .get_session_datas()
+                        .as_any()
+                        .downcast_ref::<VecModel<ChatItem>>()
+                        .expect("We know we set a VecModel earlier")
+                        .set_row_data(index, item);
+                    return;
+                }
+            }
+            return;
+        }
+    }
 }
 
 fn send_msg(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, item: MsgItem) {
@@ -280,14 +353,16 @@ pub fn recv_cb(
             match sitem.r#type.as_str() {
                 "handshake-res" => handle_handshake_respond(&ui, sitem),
                 "flush-res" => handle_flush_respond(&ui, sitem),
-                "plain" | "image" | "fileinfo" => handle_msg(&ui, sitem),
+                "plain" | "image" | "fileinfo" | "download-req" | "download-res" => {
+                    handle_msg(&ui, tx.clone(), sitem)
+                }
                 _ => (),
             }
         }
     }
 }
 
-fn handle_msg(ui: &AppWindow, sitem: MsgItem) {
+fn handle_msg(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, sitem: MsgItem) {
     let mut is_exist = false;
     for session in ui.global::<Store>().get_chat_sessions().iter() {
         if session.uuid.as_str() == sitem.from_uuid.as_str() {
@@ -309,6 +384,8 @@ fn handle_msg(ui: &AppWindow, sitem: MsgItem) {
                 "plain" => add_chat_text(&session, &sitem),
                 "image" => add_chat_image(&ui, session.uuid.to_string(), &sitem),
                 "fileinfo" => add_chat_file(&mut session, &sitem),
+                "download-req" => send_download_res(&ui, &sitem, tx.clone()),
+                "download-res" => start_download_file(&ui, &session, &sitem),
                 _ => (),
             }
 
@@ -434,6 +511,31 @@ fn add_chat_file(session: &mut ChatSession, sitem: &MsgItem) {
         });
 }
 
+fn send_download_res(ui: &AppWindow, sitem: &MsgItem, tx: mpsc::UnboundedSender<String>) {
+    let fpath = {
+        SEND_FILEINFO_CACHE
+            .lock()
+            .unwrap()
+            .get(sitem.text.as_str())
+            .unwrap_or(&String::default())
+            .clone()
+    };
+
+    if fpath.is_empty() {
+        info!("can not download file, because it has been cancel.");
+        return;
+    }
+
+    info!("send file path: {fpath:?}");
+
+    let mut mi = MsgItem::default();
+    mi.r#type = "download-res".to_string();
+    mi.to_uuid = sitem.from_uuid.clone();
+    mi.pri_data = sitem.text.clone();
+
+    filesvr::send(fpath, ui, send_dynsvrinfo, mi, tx.clone());
+}
+
 fn send_image(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, image_path: &Path) {
     match slint::Image::load_from_path(&image_path) {
         Ok(img) => {
@@ -482,6 +584,43 @@ fn send_image(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, image_path: &Pa
     }
 }
 
+fn start_download_file(ui: &AppWindow, session: &ChatSession, sitem: &MsgItem) {
+    let (uuid, file_path) = {
+        match RECV_FILEINFO_CACHE
+            .lock()
+            .unwrap()
+            .get(sitem.pri_data.as_str())
+        {
+            Some((u, f)) => (u.clone(), f.clone()),
+            None => {
+                ui.global::<Logic>().invoke_show_message(
+                    slint::format!(
+                        "{}. {}: {:?}",
+                        tr("下载失败"),
+                        tr("原因"),
+                        "file not in the cache"
+                    ),
+                    "warning".into(),
+                );
+                return;
+            }
+        }
+    };
+
+    let args = RecvFileCBArgs::File(ChatFileArgs {
+        uuid,
+        dfi: DynFileSvrInfo::from(sitem.text.as_str()),
+    });
+
+    filesvr::recv(
+        ui,
+        args,
+        recv_file_fileinfo,
+        session.uuid.to_string(),
+        file_path,
+    );
+}
+
 fn send_dynsvrinfo(
     ui: Weak<AppWindow>,
     mut mi: MsgItem,
@@ -508,7 +647,12 @@ fn send_dynsvrinfo(
     };
 }
 
-fn recv_image_fileinfo(ui: Weak<AppWindow>, suuid: String, img_path: String) {
+fn recv_image_fileinfo(
+    ui: Weak<AppWindow>,
+    suuid: String,
+    img_path: String,
+    _args: RecvFileCBArgs,
+) {
     let ui = ui.unwrap();
     for (index, session) in ui.global::<Store>().get_chat_sessions().iter().enumerate() {
         if session.uuid.as_str() == suuid.as_str() {
@@ -543,6 +687,41 @@ fn recv_image_fileinfo(ui: Weak<AppWindow>, suuid: String, img_path: String) {
     }
 }
 
+fn recv_file_fileinfo(
+    ui: Weak<AppWindow>,
+    suuid: String,
+    _save_path: String,
+    args: RecvFileCBArgs,
+) {
+    let ui = ui.unwrap();
+    match args {
+        RecvFileCBArgs::File(arg) => {
+            for session in ui.global::<Store>().get_chat_sessions().iter() {
+                if session.uuid.as_str() == suuid.as_str() {
+                    for (index, mut item) in session.chat_items.iter().enumerate() {
+                        if item.uuid.as_str() == arg.uuid.as_str() {
+                            item.file_status = "downloaded".into();
+                            session
+                                .chat_items
+                                .as_any()
+                                .downcast_ref::<VecModel<ChatItem>>()
+                                .expect("We know we set a VecModel earlier")
+                                .set_row_data(index, item);
+
+                            ui.global::<Logic>()
+                                .invoke_show_message(tr("下载成功").into(), "success".into());
+
+                            return;
+                        }
+                    }
+                    return;
+                }
+            }
+        }
+        _ => (),
+    }
+}
+
 fn get_fileinfo(file_path: &Path) -> FileInfo {
     let total_size = util::fs::file_size(file_path);
     let name = file_path
@@ -564,7 +743,7 @@ fn send_fileinfo(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, file_path: &
     let fi = get_fileinfo(file_path);
 
     {
-        FILEINFO_CACHE
+        SEND_FILEINFO_CACHE
             .lock()
             .unwrap()
             .insert(fi.id.clone(), file_path.to_str().unwrap_or("").to_string());

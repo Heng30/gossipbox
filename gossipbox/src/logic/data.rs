@@ -10,6 +10,7 @@ pub struct MsgItem {
     pub name: String,
     pub status: String,
     pub text: String,
+    pub pri_data: String,
 }
 
 impl From<&str> for MsgItem {
@@ -31,6 +32,7 @@ impl Default for MsgItem {
             name: config::chat().user_name,
             status: config::chat().user_status,
             text: String::default(),
+            pri_data: String::default(),
         }
     }
 }

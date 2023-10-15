@@ -13,4 +13,4 @@ pub mod setting;
 pub mod svr;
 pub mod util;
 pub mod window;
-pub use data::MsgItem;
+pub use data::{MsgItem, RecvFileCBArgs};

@@ -22,7 +22,8 @@ mod util;
 mod version;
 
 use logic::{
-    about, chat, clipboard, message, ok_cancel_dialog, ping, session, setting, svr, window, MsgItem,
+    about, chat, clipboard, message, ok_cancel_dialog, ping, session, setting, svr, window,
+    MsgItem, RecvFileCBArgs,
 };
 
 pub type CResult = Result<(), Box<dyn std::error::Error>>;
@@ -31,7 +32,8 @@ pub type SendCB =
 pub type SendFileCB =
     fn(ui: Weak<AppWindow>, mi: MsgItem, listen_port: u16, tx: mpsc::UnboundedSender<String>);
 
-pub type RecvFileCB = fn(ui: Weak<AppWindow>, suuid: String, img_path: String);
+pub type RecvFileCB =
+    fn(ui: Weak<AppWindow>, suuid: String, img_path: String, args: RecvFileCBArgs);
 
 #[tokio::main]
 async fn main() -> CResult {

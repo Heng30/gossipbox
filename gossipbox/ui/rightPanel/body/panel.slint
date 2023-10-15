@@ -101,6 +101,7 @@ export component Body inherits Rectangle {
             }
 
             if data.type == "bfile": BFile {
+                uuid: data.uuid;
                 file-id: data.file-id;
                 name: data.file-name;
                 status: data.file-status;

@@ -20,7 +20,10 @@ pub fn tr(text: &str) -> String {
     items.insert("重置成功", "Reset success");
     items.insert("刷新成功", "Flush success");
     items.insert("发送失败", "Send failed");
+    items.insert("下载成功", "Download success");
+    items.insert("下载失败", "Download failed");
     items.insert("正在重试...", "Retrying...");
+    items.insert("正在下载...", "Downloading...");
     items.insert("刷新...", "Flush...");
     items.insert("在线", "Online");
     items.insert("正忙", "Busy");

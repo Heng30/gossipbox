@@ -5,6 +5,7 @@ import { Logic } from "../../logic.slint";
 import { Btn } from "../../base/btn.slint";
 
 export component BFile inherits HorizontalLayout {
+    in-out property<string> uuid;
     in-out property<string> file-id;
     in-out property<string> name;
     in-out property<string> size;
@@ -70,6 +71,10 @@ export component BFile inherits HorizontalLayout {
                         border-radius: Theme.border-radius;
                         text: Store.translator.file-download;
                         icon: @image-url("../../images/download.svg");
+
+                        clicked => {
+                            Logic.download-file(root.uuid, root.file-id, root.name);
+                        }
                     }
 
                 }

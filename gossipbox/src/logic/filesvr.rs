@@ -111,14 +111,9 @@ pub fn recv(
                                 }
                                 _ => {
                                     let ui = ui_handle.clone();
-                                    match args {
-                                        RecvFileCBArgs::Image(_) => {
-                                            let _ = slint::invoke_from_event_loop(move || {
-                                                cb(ui, suuid, save_path);
-                                            });
-                                        }
-                                        RecvFileCBArgs::File(ref _item) => {}
-                                    }
+                                    let _ = slint::invoke_from_event_loop(move || {
+                                        cb(ui, suuid, save_path, args);
+                                    });
                                 }
                             }
                             return;

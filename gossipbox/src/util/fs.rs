@@ -37,14 +37,16 @@ pub fn file_size(path: &Path) -> u64 {
 }
 
 pub fn file_size_string(size: u64) -> String {
-    if size > T {
-        format!("{:.2}T", size / T)
-    } else if size > G {
-        format!("{:.2}G", size / G)
-    } else if size > M {
-        format!("{:.2}M", size / M)
-    } else if size > K {
-        format!("{:.2}K", size / K)
+    let size = size as f64;
+
+    if size > T as f64 {
+        format!("{:.2}T", size / T as f64)
+    } else if size > G as f64 {
+        format!("{:.2}G", size / G as f64)
+    } else if size > M as f64 {
+        format!("{:.2}M", size / M as f64)
+    } else if size > K as f64 {
+        format!("{:.2}K", size / K as f64)
     } else {
         format!("{}B", size)
     }

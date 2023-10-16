@@ -26,6 +26,14 @@ export component AppWindow inherits Window {
     forward-focus: fscope;
     title: "gossipbox";
 
+    public function is-chats-on-bottom() -> bool {
+        return rpanel.is-chats-on-bottom();
+    }
+
+    public function chats-scroll-to-bottom() {
+        rpanel.scroll-to-bottom();
+    }
+
     init => {
         rpanel.focus();
     }

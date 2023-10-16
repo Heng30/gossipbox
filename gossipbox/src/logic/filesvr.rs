@@ -1,4 +1,5 @@
 use super::data::{MsgItem, RecvFileCBArgs};
+use crate::config;
 use crate::slint_generatedAppWindow::{AppWindow, Logic};
 use crate::util::translator::tr;
 use crate::{RecvFileCB, SendFileCB};
@@ -29,7 +30,10 @@ pub fn send(
     tx: mpsc::UnboundedSender<String>,
 ) {
     let ui_handle = ui.as_weak();
+
     tokio::spawn(async move {
+        let fs_config = config::filesvr();
+
         match TcpListener::bind("0:0").await {
             Ok(listener) => {
                 let listen_port = match listener.local_addr() {
@@ -49,7 +53,12 @@ pub fn send(
                     cb(ui, mi, listen_port, tx);
                 });
 
-                match timeout(Duration::from_secs(15), listener.accept()).await {
+                match timeout(
+                    Duration::from_secs(fs_config.accept_timeout),
+                    listener.accept(),
+                )
+                .await
+                {
                     Ok(Ok((mut socket, _))) => {
                         debug!("Peer is connected. Sending file: {file_path}");
                         match File::open(file_path.to_owned()).await {
@@ -96,10 +105,17 @@ pub fn recv(
             RecvFileCBArgs::File(ref item) => item.dfi.clone(),
         };
 
+        let fs_config = config::filesvr();
+
         for ip in dfi.ips.into_iter() {
             let addr = format!("{}:{}", ip, dfi.port);
 
-            match timeout(Duration::from_secs(3), TcpStream::connect(addr)).await {
+            match timeout(
+                Duration::from_secs(fs_config.connect_timeout),
+                TcpStream::connect(addr),
+            )
+            .await
+            {
                 Ok(Ok(mut stream)) => {
                     info!("Peer is connected. Receiving file: {save_path:?}");
 
@@ -123,7 +139,12 @@ pub fn recv(
                         }
                     }
                 }
-                _ => (),
+                Ok(Err(e)) => {
+                    show_error(&ui_handle.clone().unwrap(), e.to_string());
+                }
+                Err(_) => {
+                    show_error(&ui_handle.clone().unwrap(), "Accept timed out".to_string());
+                }
             }
         }
     });

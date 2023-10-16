@@ -28,6 +28,10 @@ pub fn swarm() -> data::Swarm {
     CONFIG.lock().unwrap().borrow().swarm.clone()
 }
 
+pub fn filesvr() -> data::FileSvr {
+    CONFIG.lock().unwrap().borrow().filesvr.clone()
+}
+
 pub fn app_uuid() -> String {
     CONFIG.lock().unwrap().borrow().app_uuid.clone()
 }
@@ -116,6 +120,7 @@ impl Config {
                     self.app_uuid = c.app_uuid;
                     self.net = c.net;
                     self.swarm = c.swarm;
+                    self.filesvr = c.filesvr;
                     self.ui = c.ui;
                     self.chat = c.chat;
                     Ok(())

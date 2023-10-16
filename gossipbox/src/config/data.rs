@@ -17,6 +17,7 @@ pub struct Config {
     pub ui: UI,
     pub chat: Chat,
     pub swarm: Swarm,
+    pub filesvr: FileSvr,
 }
 
 impl Default for Config {
@@ -30,6 +31,7 @@ impl Default for Config {
             ui: UI::default(),
             chat: Chat::default(),
             swarm: Swarm::default(),
+            filesvr: FileSvr::default(),
         }
     }
 }
@@ -83,6 +85,21 @@ impl Default for Chat {
         Self {
             user_name: "匿名用户".to_string(),
             user_status: "在线".to_string(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FileSvr {
+    pub accept_timeout: u64,
+    pub connect_timeout: u64,
+}
+
+impl Default for FileSvr {
+    fn default() -> Self {
+        Self {
+            accept_timeout: 15,
+            connect_timeout: 3,
         }
     }
 }

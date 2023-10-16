@@ -10,6 +10,15 @@ export component RPanel inherits VerticalLayout {
     in-out property chats-viewport-y <=> body.viewport-y;
     forward-focus: footer;
 
+    public function is-chats-on-bottom() -> bool {
+        return body.is-chats-on-bottom();
+    }
+
+    public function scroll-to-bottom() {
+        return body.scroll-to-bottom();
+    }
+
+
     body := Body { }
     footer := Footer {
         scroll-to-top => {

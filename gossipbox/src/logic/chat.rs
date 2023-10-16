@@ -16,6 +16,7 @@ use std::ffi::OsStr;
 use std::fs;
 use std::path::Path;
 use std::sync::Mutex;
+use std::time::Duration;
 use tokio::sync::mpsc;
 use uuid::Uuid;
 
@@ -62,6 +63,8 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
                 ..Default::default()
             });
 
+        chat_panel_scroll_to_bottom(&ui);
+
         let mut mi = MsgItem::default();
         mi.r#type = "plain".to_string();
         mi.to_uuid = suuid.to_string();
@@ -90,6 +93,8 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             _ => return,
         };
 
+        chat_panel_scroll_to_bottom(&ui);
+
         send_image(&ui, tx_handle.clone(), &image_path);
     });
 
@@ -109,6 +114,8 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
             }
             _ => return,
         };
+
+        chat_panel_scroll_to_bottom(&ui);
 
         send_fileinfo(&ui, tx_handle.clone(), file_path.as_path());
     });
@@ -179,6 +186,8 @@ pub fn init(ui: &AppWindow, tx: mpsc::UnboundedSender<String>) {
                     }
                     _ => (),
                 }
+
+                chat_panel_scroll_to_bottom(&ui);
 
                 ui.global::<Logic>()
                     .invoke_show_message(tr("正在重试...").into(), "success".into());
@@ -389,6 +398,15 @@ fn handle_msg(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, sitem: MsgItem)
                 "download-req" => send_download_res(&ui, &sitem, tx.clone()),
                 "download-res" => start_download_file(&ui, &session, &sitem),
                 "error" => handle_error(&ui, &session, &sitem),
+                _ => (),
+            }
+
+            match sitem.r#type.as_str() {
+                "plain" | "image" | "fileinfo" => {
+                    if ui.invoke_is_chats_on_bottom() {
+                        chat_panel_scroll_to_bottom(&ui);
+                    }
+                }
                 _ => (),
             }
 
@@ -840,4 +858,13 @@ fn send_fileinfo(ui: &AppWindow, tx: mpsc::UnboundedSender<String>, file_path: &
             );
         }
     };
+}
+
+fn chat_panel_scroll_to_bottom(ui: &AppWindow) {
+    for i in 1..=2 {
+        let ui = ui.as_weak();
+        slint::Timer::single_shot(Duration::from_millis(i * 100), move || {
+            ui.unwrap().invoke_chats_scroll_to_bottom()
+        });
+    }
 }

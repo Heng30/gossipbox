@@ -27,13 +27,13 @@ futures = "0.3"
 image = "0.24"
 if-addrs = "0.10"
 
-slint = { version = "1.2", features = ["log"] }
+slint = { version = "1", features = ["log"] }
 uuid = { version = "1.3", features = ["v4"] }
 tokio = {version = "1.32", features = ["full"]}
 libp2p = { version = "0.52", features = ["tokio", "gossipsub", "mdns", "noise", "macros", "tcp", "yamux", "quic"] }
 
 [build-dependencies]
-slint-build = "1.2"
+slint-build = "1"
 cmd_lib = "1.3"
 
 [target.'cfg(target_os = "windows")'.build-dependencies]

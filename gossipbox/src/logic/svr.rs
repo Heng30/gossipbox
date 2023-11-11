@@ -3,11 +3,11 @@ use crate::util::translator::tr;
 use crate::{chat, config, SendCB};
 use anyhow::{anyhow, Result};
 use futures::stream::StreamExt;
+#[allow(deprecated)]
 use libp2p::{
     core::{muxing::StreamMuxerBox, transport::OptionalTransport},
     gossipsub, identity, mdns, quic,
-    swarm::NetworkBehaviour,
-    swarm::{SwarmBuilder, SwarmEvent},
+    swarm::{NetworkBehaviour, SwarmBuilder, SwarmEvent},
     PeerId, Transport,
 };
 use log::{info, warn};
@@ -86,6 +86,8 @@ async fn start_gossipsub(
     let mut swarm = {
         let mdns = mdns::tokio::Behaviour::new(mdns::Config::default(), local_peer_id)?;
         let behaviour = CBehaviour { gossipsub, mdns };
+
+        #[allow(deprecated)]
         SwarmBuilder::with_tokio_executor(transport, behaviour, local_peer_id).build()
     };
 

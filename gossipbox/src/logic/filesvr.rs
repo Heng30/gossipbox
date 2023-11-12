@@ -4,7 +4,7 @@ use crate::slint_generatedAppWindow::{AppWindow, Logic};
 use crate::util::translator::tr;
 use crate::{RecvFileCB, SendFileCB};
 use log::{debug, info};
-use slint::ComponentHandle;
+use slint::{ComponentHandle, Weak};
 use std::time::Duration;
 use tokio::fs::File;
 use tokio::io::{BufReader, BufWriter};
@@ -12,8 +12,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
 use tokio::time::timeout;
 
-fn show_error(ui: &AppWindow, estr: String) {
-    let ui = ui.as_weak();
+fn show_error(ui: Weak<AppWindow>, estr: String) {
     let _ = slint::invoke_from_event_loop(move || {
         ui.unwrap().global::<Logic>().invoke_show_message(
             slint::format!("{}. {}: {:?}", tr("发送失败"), tr("原因"), estr),
@@ -34,7 +33,7 @@ pub fn send(
     tokio::spawn(async move {
         let fs_config = config::filesvr();
 
-        match TcpListener::bind("0:0").await {
+        match TcpListener::bind("0.0.0.0:0").await {
             Ok(listener) => {
                 let listen_port = match listener.local_addr() {
                     Ok(addr) => {
@@ -42,7 +41,7 @@ pub fn send(
                         addr.port()
                     }
                     Err(e) => {
-                        show_error(&ui_handle.clone().unwrap(), e.to_string());
+                        show_error(ui_handle.clone(), e.to_string());
                         return;
                     }
                 };
@@ -66,26 +65,26 @@ pub fn send(
                                 match tokio::io::copy(&mut BufReader::new(file), &mut socket).await
                                 {
                                     Err(e) => {
-                                        show_error(&ui_handle.clone().unwrap(), e.to_string());
+                                        show_error(ui_handle.clone(), e.to_string());
                                     }
                                     _ => (),
                                 }
                             }
                             Err(e) => {
-                                show_error(&ui_handle.clone().unwrap(), e.to_string());
+                                show_error(ui_handle.clone(), e.to_string());
                             }
                         }
                     }
                     Ok(Err(e)) => {
-                        show_error(&ui_handle.clone().unwrap(), e.to_string());
+                        show_error(ui_handle.clone(), e.to_string());
                     }
                     Err(_) => {
-                        show_error(&ui_handle.clone().unwrap(), "Accept timed out".to_string());
+                        show_error(ui_handle.clone(), "Accept timed out".to_string());
                     }
                 }
             }
             Err(e) => {
-                show_error(&ui_handle.clone().unwrap(), e.to_string());
+                show_error(ui_handle.clone(), e.to_string());
             }
         };
     });
@@ -123,7 +122,7 @@ pub fn recv(
                         Ok(file) => {
                             match tokio::io::copy(&mut stream, &mut BufWriter::new(file)).await {
                                 Err(e) => {
-                                    show_error(&ui_handle.clone().unwrap(), e.to_string());
+                                    show_error(ui_handle.clone(), e.to_string());
                                 }
                                 _ => {
                                     let ui = ui_handle.clone();
@@ -135,15 +134,15 @@ pub fn recv(
                             return;
                         }
                         Err(e) => {
-                            show_error(&ui_handle.clone().unwrap(), e.to_string());
+                            show_error(ui_handle.clone(), e.to_string());
                         }
                     }
                 }
                 Ok(Err(e)) => {
-                    show_error(&ui_handle.clone().unwrap(), e.to_string());
+                    show_error(ui_handle.clone(), e.to_string());
                 }
                 Err(_) => {
-                    show_error(&ui_handle.clone().unwrap(), "Accept timed out".to_string());
+                    show_error(ui_handle.clone(), "Accept timed out".to_string());
                 }
             }
         }
